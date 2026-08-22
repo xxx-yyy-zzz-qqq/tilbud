@@ -35,6 +35,31 @@ Public API: `api.etilbudsavis.dk/v2`
 - `catalog_ids` returns offers for a specific catalog/week only
 - API matches PDF flyers at 94-100% across all chains
 - Catalog IDs are random 8-character strings (not sequential)
+- **All 10 chains have catalogs** (Føtex was incorrectly listed as having no catalogs)
+- Always filter by `dealer_ids` when querying catalogs — global endpoint caps at 1000
+
+### API vs PDF Comparison
+
+Comparison of API offers (filtered by `catalog_ids`) against actual PDF flyers:
+
+| Chain | Catalog | Type | API | Claimed | Match | % | Notes |
+|-------|---------|------|-----|---------|-------|---|-------|
+| Netto | uge 35 Nonfood | NONFOOD | 49 | 49 | 49 | **100%** | |
+| Netto | uge 35 | MAIN | 201 | 205 | 201 | **100%** | |
+| REMA 1000 | Uge 35 | MAIN | 107 | 107 | 107 | **100%** | |
+| REMA 1000 | Uge 34 Indstik | SUPPLEMENT | 14 | 14 | 14 | **100%** | |
+| Lidl | avis (uge 35) | MAIN | 224 | 225 | 221 | **99%** | 3 missing (banan, strygejern, røgalarm) |
+| Lidl | Weekendavis (uge 34) | SUPPLEMENT | 208 | 210 | 205 | **99%** | 3 missing |
+| Bilka | Nonfood Uge 35 | NONFOOD | 281 | 294 | 264 | **94%** | 17 missing (lingeri, kølebokse) |
+| Bilka | Food Uge 35 | FOOD | 202 | 208 | 195 | **97%** | 7 missing (spiritus, hårpleje) |
+| Føtex | Uge 34/35 | MAIN | 320 | 331 | 316 | **99%** | 4 missing (nonfood: Oral-B, TV, Nilfisk) |
+| SuperBrugsen | Uge 34 | MAIN | 149 | 150 | 148 | **99%** | 1 missing |
+| Kvickly | Uge 34 | MAIN | 208 | 209 | 207 | **100%** | 1 missing |
+| 365discount | Uge 34 | MAIN | 143 | 145 | 143 | **100%** | |
+| MENY | uge 35 | MAIN | 125 | 126 | 124 | **99%** | 1 missing |
+| SPAR | uge 35 | MAIN | 84 | 84 | 83 | **99%** | 1 missing |
+
+**Summary**: 94-100% match across all chains. API is the source of truth.
 
 ## Target Chains
 
