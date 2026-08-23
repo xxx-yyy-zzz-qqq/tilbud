@@ -213,9 +213,10 @@ CREATE TABLE searches (
 ## Tech Stack
 
 - **Backend**: Java 25, Spring Boot 4.0, Spring MVC, Virtual Threads
+- **Build**: Gradle 8.12 (Kotlin DSL)
 - **Database**: PostgreSQL 16, Flyway migrations
 - **Frontend**: React 19, TypeScript, Vite
-- **Build**: Maven, Docker Compose
+- **Docker**: Docker Compose
 - **Testing**: JUnit 5, Testcontainers
 
 ## Local Development
@@ -295,13 +296,13 @@ npm test
 cd backend
 
 # Run Spring Boot locally
-./mvnw spring-boot:run
+./gradlew bootRun
 
 # Build JAR
-./mvnw clean package
+./gradlew build
 
 # Run tests
-./mvnw test
+./gradlew test
 ```
 
 ### Environment Variables

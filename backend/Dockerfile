@@ -1,14 +1,14 @@
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-RUN ./mvnw dependency:resolve
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
 COPY src src
-RUN ./mvnw package -DskipTests
+RUN ./gradlew build -x test
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
