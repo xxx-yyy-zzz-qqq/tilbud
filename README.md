@@ -212,11 +212,107 @@ CREATE TABLE searches (
 
 ## Tech Stack
 
-- **Backend**: Java 21, Spring Boot 3.x, Spring MVC, Virtual Threads
-- **Database**: PostgreSQL 16
+- **Backend**: Java 25, Kotlin, Spring Boot 4.0, Spring MVC, Virtual Threads
+- **Database**: PostgreSQL 16, Flyway migrations
 - **Frontend**: React 19, TypeScript, Vite
 - **Build**: Maven, Docker Compose
-- **Testing**: JUnit 5, Testcontainers, Playwright
+- **Testing**: JUnit 5, Testcontainers
+
+## Local Development
+
+### Prerequisites
+
+- Docker & Docker Compose
+- Java 25 (for local development without Docker)
+- Node.js 20+ (for frontend development without Docker)
+
+### Quick Start
+
+```bash
+# Clone the repo
+git clone https://github.com/xxx-yyy-zzz-qqq/tilbud.git
+cd tilbud
+
+# Copy environment variables
+cp .env.example .env
+
+# Start all services
+./dev.sh
+```
+
+This starts:
+- **PostgreSQL** on `localhost:5432`
+- **Spring Boot backend** on `localhost:8080`
+- **React frontend** on `localhost:5173`
+
+### Development Commands
+
+```bash
+# Start all services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# Rebuild after changes
+docker-compose up --build
+
+# Run database migrations manually
+docker-compose exec backend java -jar app.jar
+
+# Access PostgreSQL
+docker-compose exec db psql -U tilbud -d tilbud
+```
+
+### Frontend Development
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start dev server (with hot reload)
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+```
+
+### Backend Development
+
+```bash
+cd backend
+
+# Run Spring Boot locally
+./mvnw spring-boot:run
+
+# Build JAR
+./mvnw clean package
+
+# Run tests
+./mvnw test
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSTGRES_DB` | `tilbud` | Database name |
+| `POSTGRES_USER` | `tilbud` | Database user |
+| `POSTGRES_PASSWORD` | `tilbud` | Database password |
+| `API_BASE_URL` | `https://api.etilbudsavis.dk/v2` | External API URL |
+| `VITE_API_URL` | `http://localhost:8080` | Backend API URL for frontend |
 
 ## Research
 
