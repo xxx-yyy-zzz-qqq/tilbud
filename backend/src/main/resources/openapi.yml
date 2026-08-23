@@ -1,0 +1,295 @@
+openapi: 3.0.3
+info:
+  title: Tilbud API
+  description: Danish grocery weekly ads API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+
+paths:
+  /offers/search:
+    get:
+      summary: Search offers
+      operationId: searchOffers
+      parameters:
+        - name: q
+          in: query
+          description: Full-text search query (searches heading + description)
+          schema:
+            type: string
+        - name: chain
+          in: query
+          description: Filter by chain dealer_id (multiple values allowed)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          description: Minimum price in øre
+          schema:
+            type: integer
+        - name: maxPrice
+          in: query
+          description: Maximum price in øre
+          schema:
+            type: integer
+        - name: validFrom
+          in: query
+          description: Offers valid from this date (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: validTo
+          in: query
+          description: Offers valid until this date (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: catalogId
+          in: query
+          description: Filter by catalog ID
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [price_asc, price_desc, date_asc, date_desc, relevance]
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated offer results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferPage'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /offers/{id}:
+    get:
+      summary: Get offer by ID
+      operationId: getOffer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Offer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferResponse'
+        '404':
+          description: Offer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chains:
+    get:
+      summary: List chains with offer counts
+      operationId: listChains
+      responses:
+        '200':
+          description: List of chains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChainResponse'
+
+  /catalogs:
+    get:
+      summary: List catalogs
+      operationId: listCatalogs
+      parameters:
+        - name: chain
+          in: query
+          description: Filter by chain dealer_id
+          schema:
+            type: string
+        - name: valid_from
+          in: query
+          description: Catalogs valid from this date (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: valid_to
+          in: query
+          description: Catalogs valid until this date (inclusive)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of catalogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogResponse'
+
+  /categories:
+    get:
+      summary: List distinct categories
+      operationId: listCategories
+      responses:
+        '200':
+          description: List of category IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+components:
+  schemas:
+    OfferPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/OfferResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+
+    OfferResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        offerId:
+          type: string
+        chain:
+          $ref: '#/components/schemas/ChainSummary'
+        heading:
+          type: string
+        description:
+          type: string
+        price:
+          type: integer
+        prePrice:
+          type: integer
+        currency:
+          type: string
+        catalogPage:
+          type: integer
+        quantity:
+          type: string
+        images:
+          type: string
+        runFrom:
+          type: string
+          format: date-time
+        runTill:
+          type: string
+          format: date-time
+
+    ChainSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dealerId:
+          type: string
+        name:
+          type: string
+
+    ChainResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dealerId:
+          type: string
+        name:
+          type: string
+        website:
+          type: string
+        logoUrl:
+          type: string
+        color:
+          type: string
+        offerCount:
+          type: integer
+
+    CatalogResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        catalogId:
+          type: string
+        chain:
+          $ref: '#/components/schemas/ChainSummary'
+        label:
+          type: string
+        catalogType:
+          type: string
+          enum: [MAIN, FOOD, NONFOOD, SUPPLEMENT]
+        categoryIds:
+          type: array
+          items:
+            type: string
+        runFrom:
+          type: string
+          format: date-time
+        runTill:
+          type: string
+          format: date-time
+        offerCount:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string

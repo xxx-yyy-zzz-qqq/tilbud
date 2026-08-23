@@ -1,0 +1,59 @@
+{
+  "version": "1",
+  "name": "Tilbud API",
+  "items": [
+    {
+      "name": "Search Offers",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/offers/search",
+        "params": [
+          { "key": "q", "value": "mælk", "disabled": false },
+          { "key": "chain", "value": "9ba51", "disabled": true },
+          { "key": "min_price", "value": "1000", "disabled": true },
+          { "key": "max_price", "value": "5000", "disabled": true },
+          { "key": "sort", "value": "price_asc", "disabled": true },
+          { "key": "page", "value": "0", "disabled": false },
+          { "key": "size", "value": "20", "disabled": false }
+        ]
+      }
+    },
+    {
+      "name": "Get Offer by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/offers/{{offerId}}"
+      }
+    },
+    {
+      "name": "List Chains",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/chains"
+      }
+    },
+    {
+      "name": "List Catalogs",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/catalogs",
+        "params": [
+          { "key": "chain", "value": "9ba51", "disabled": true },
+          { "key": "valid_from", "value": "2026-08-01", "disabled": true },
+          { "key": "valid_to", "value": "2026-08-31", "disabled": true }
+        ]
+      }
+    },
+    {
+      "name": "List Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/categories"
+      }
+    }
+  ],
+  "variables": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "offerId", "value": "" }
+  ]
+}
