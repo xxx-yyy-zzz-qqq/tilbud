@@ -212,7 +212,7 @@ CREATE TABLE searches (
 
 ## Tech Stack
 
-- **Backend**: Java 25, Kotlin, Spring Boot 4.0, Spring MVC, Virtual Threads
+- **Backend**: Java 25, Spring Boot 4.0, Spring MVC, Virtual Threads
 - **Database**: PostgreSQL 16, Flyway migrations
 - **Frontend**: React 19, TypeScript, Vite
 - **Build**: Maven, Docker Compose
