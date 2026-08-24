@@ -1,5 +1,7 @@
 # Tilbud — Danish Grocery Weekly Ads
 
+**Disclaimer**: This project fetches data from a public API (`api.etilbudsavis.dk`). The API provider's terms of service may restrict commercial use or redistribution of the data. This project is for personal/educational use only. Users are responsible for complying with the API provider's terms.
+
 Search engine for Danish grocery store weekly offers (tilbudsaviser).
 
 ## Architecture
@@ -76,78 +78,6 @@ Comparison of API offers (filtered by `catalog_ids`) against actual PDF flyers:
 | MENY | `267e1m` | Yes | No | No |
 | SPAR | `88ddE` | Yes | No | No |
 
-## Data Model (Draft)
-
-### chains
-
-```sql
-CREATE TABLE chains (
-    id VARCHAR(5) PRIMARY KEY,          -- dealer_id, e.g., "9ba51"
-    name VARCHAR(100) NOT NULL,         -- e.g., "Netto"
-    website VARCHAR(255),
-    logo_url VARCHAR(500),
-    color VARCHAR(6),                   -- hex color, e.g., "FFD700"
-    country VARCHAR(2) DEFAULT 'DK',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-### catalogs
-
-```sql
-CREATE TYPE catalog_type AS ENUM ('MAIN', 'FOOD', 'NONFOOD', 'SUPPLEMENT');
-
-CREATE TABLE catalogs (
-    id VARCHAR(8) PRIMARY KEY,          -- random string, e.g., "rZPphMb7"
-    chain_id VARCHAR(5) NOT NULL,       -- FK to chains
-    label VARCHAR(255),                 -- e.g., "Uge 35"
-    catalog_type catalog_type,
-    run_from TIMESTAMPTZ,
-    run_till TIMESTAMPTZ,
-    offer_count INTEGER,                -- claimed count from API
-    category_ids TEXT[],                -- e.g., ["groceries_discount"]
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    FOREIGN KEY (chain_id) REFERENCES chains(id)
-);
-```
-
-### offers
-
-```sql
-CREATE TABLE offers (
-    id VARCHAR(30) PRIMARY KEY,         -- API offer ID
-    chain_id VARCHAR(5) NOT NULL,       -- FK to chains
-    catalog_id VARCHAR(8) NOT NULL,     -- FK to catalogs
-    heading VARCHAR(255) NOT NULL,      -- product name
-    description TEXT,                   -- full description
-    price INTEGER NOT NULL,             -- price in øre (integer)
-    pre_price INTEGER,                  -- original price in øre (nullable)
-    currency VARCHAR(3) DEFAULT 'DKK',
-    catalog_page INTEGER,               -- page number in flyer
-    run_from TIMESTAMPTZ,
-    run_till TIMESTAMPTZ,
-    image_url VARCHAR(500),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    FOREIGN KEY (chain_id) REFERENCES chains(id),
-    FOREIGN KEY (catalog_id) REFERENCES catalogs(id)
-);
-```
-
-### searches (future)
-
-```sql
-CREATE TABLE searches (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    query JSONB NOT NULL,               -- {"chains": [...], "categories": [...], "max_price": 50}
-    name VARCHAR(100),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
 ## Fetch Strategy
 
 1. **Daily at 06:00**: Check for new catalogs
@@ -212,12 +142,14 @@ CREATE TABLE searches (
 
 ## Tech Stack
 
-- **Backend**: Java 25, Spring Boot 4.0, Spring MVC, Virtual Threads
-- **Build**: Gradle 8.12 (Kotlin DSL)
+- **Backend**: Java 25, Spring Boot 4.1.0, Spring MVC, Virtual Threads
+- **Build**: Gradle 9.7.1 (Kotlin DSL)
 - **Database**: PostgreSQL 16, Flyway migrations
 - **Frontend**: React 19, TypeScript, Vite
 - **Docker**: Docker Compose
-- **Testing**: JUnit 5, Testcontainers
+- **Testing**: JUnit 5, H2, MockMvc
+- **CI/CD**: GitHub Actions, GitHub Container Registry
+- **API Collection**: Bruno
 
 ## Local Development
 
@@ -225,7 +157,7 @@ CREATE TABLE searches (
 
 - Docker & Docker Compose
 - Java 25 (for local development without Docker)
-- Node.js 20+ (for frontend development without Docker)
+- Node.js 24 (for frontend development without Docker)
 
 ### Quick Start
 
@@ -324,14 +256,4 @@ Key files:
 - `research/legal-tos-review.md` — Legal/ToS research findings
 - `research/scraper-feasibility.md` — Superseded by public API
 
-## GitHub Issues
 
-- #1: Wayfinder Map
-- #4: Data model
-- #5: Search API contract
-- #6: Frontend search UX
-- #7: Category normalization
-- #9: Scheduler & observability
-- #10: Local dev environment
-- #11: CI/CD pipeline
-- #14: API research (closed with findings)
