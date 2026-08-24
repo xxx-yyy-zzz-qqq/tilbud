@@ -34,7 +34,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend/src:/app/src
-      - ./backend/pom.xml:/app/pom.xml
+      - ./backend/build.gradle.kts:/app/build.gradle.kts
 
   frontend:
     build:

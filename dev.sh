@@ -11,7 +11,7 @@ fi
 
 # Start services
 echo "Starting Docker Compose..."
-docker-compose up --build
+docker compose up --build
 
 # On Ctrl+C, stop all services
-trap 'echo "Stopping..."; docker-compose down; exit 0' INT TERM
+trap 'echo "Stopping..."; docker compose down; exit 0' INT TERM
