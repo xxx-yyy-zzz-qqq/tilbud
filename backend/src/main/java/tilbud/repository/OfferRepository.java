@@ -12,6 +12,7 @@ public interface OfferRepository extends JpaRepository<Offer, UUID> {
     List<Offer> findByCatalog(Catalog catalog);
     List<Offer> findByChain(Chain chain);
     long countByCatalog(Catalog catalog);
+    long countByChain(Chain chain);
 
     @Query(value = "SELECT * FROM offers WHERE to_tsvector('simple', heading || ' ' || COALESCE(description, '')) @@ plainto_tsquery('simple', :query)", nativeQuery = true)
     List<Offer> search(String query);
