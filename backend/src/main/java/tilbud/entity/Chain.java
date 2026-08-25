@@ -12,7 +12,7 @@ public class Chain {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "dealer_id", nullable = false, unique = true, length = 5)
+    @Column(name = "dealer_id", nullable = false, unique = true, length = 10)
     private String dealerId;
 
     @Column(nullable = false, length = 100)

@@ -1,0 +1,1 @@
+ALTER TABLE chains ALTER COLUMN dealer_id TYPE VARCHAR(10);
