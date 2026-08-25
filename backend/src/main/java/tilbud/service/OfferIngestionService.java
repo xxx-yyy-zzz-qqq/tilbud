@@ -3,6 +3,7 @@ package tilbud.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
+import org.springframework.transaction.annotation.Transactional;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -187,6 +188,7 @@ public class OfferIngestionService {
     @CircuitBreaker(name = "etilbudsavis", fallbackMethod = "fetchChainFallback")
     @Retry(name = "etilbudsavis")
     @Timed(value = "etilbudsavis_chain_fetch_duration", description = "Time to fetch one chain")
+    @Transactional
     public void fetchChain(Chain chain) {
         log.debug("Fetching catalogs for chain {} ({})", chain.getName(), chain.getDealerId());
 
