@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-tilbud}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tilbud}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -32,9 +32,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/build.gradle.kts:/app/build.gradle.kts
 
   frontend:
     build:
@@ -42,15 +39,11 @@ services:
       dockerfile: Dockerfile
     container_name: tilbud-frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     environment:
       VITE_API_URL: http://localhost:8080
     depends_on:
       - backend
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/index.html:/app/index.html
-      - ./frontend/vite.config.ts:/app/vite.config.ts
 
 volumes:
   pgdata:
