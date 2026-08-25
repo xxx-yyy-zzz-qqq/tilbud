@@ -29,6 +29,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -197,9 +198,13 @@ public class OfferIngestionService {
         log.debug("Chain {} has {} catalogs, {} weekly",
             chain.getDealerId(), catalogs.size(), weeklyCatalogs.size());
 
+        Set<String> seenCatalogIds = new HashSet<>();
+
         for (CatalogDto catalogDto : weeklyCatalogs) {
-            fetchCatalogOffers(chain, catalogDto);
+            fetchCatalogOffers(chain, catalogDto, seenCatalogIds);
         }
+
+        catalogRepository.deleteByChainAndCatalogIdNotIn(chain, seenCatalogIds);
     }
 
     public void fetchChainFallback(Chain chain, Exception e) {
@@ -208,7 +213,7 @@ public class OfferIngestionService {
             "chain", chain.getDealerId()).increment();
     }
 
-    private void fetchCatalogOffers(Chain chain, CatalogDto catalogDto) {
+    private void fetchCatalogOffers(Chain chain, CatalogDto catalogDto, Set<String> seenCatalogIds) {
         List<OfferDto> offers = client.getOffers(catalogDto.id());
 
         if (offers.isEmpty()) {
@@ -216,6 +221,7 @@ public class OfferIngestionService {
             return;
         }
 
+        seenCatalogIds.add(catalogDto.id());
         Catalog catalog = findOrCreateCatalog(chain, catalogDto);
 
         // Deduplicate by offer ID
