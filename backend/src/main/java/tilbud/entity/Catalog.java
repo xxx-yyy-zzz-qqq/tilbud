@@ -23,9 +23,8 @@ public class Catalog {
     @Column(length = 255)
     private String label;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "catalog_type")
-    private CatalogType catalogType;
+    @Column(name = "catalog_type", length = 20)
+    private String catalogType;
 
     @Column(name = "category_ids")
     private List<String> categoryIds;
@@ -57,7 +56,7 @@ public class Catalog {
     public String getCatalogId() { return catalogId; }
     public Chain getChain() { return chain; }
     public String getLabel() { return label; }
-    public CatalogType getCatalogType() { return catalogType; }
+    public String getCatalogType() { return catalogType; }
     public List<String> getCategoryIds() { return categoryIds; }
     public Instant getRunFrom() { return runFrom; }
     public Instant getRunTill() { return runTill; }
@@ -65,7 +64,7 @@ public class Catalog {
     public String getPdfUrl() { return pdfUrl; }
     public Instant getCreatedAt() { return createdAt; }
 
-    public void setCatalogType(CatalogType catalogType) { this.catalogType = catalogType; }
+    public void setCatalogType(String catalogType) { this.catalogType = catalogType; }
     public void setCategoryIds(List<String> categoryIds) { this.categoryIds = categoryIds; }
     public void setRunFrom(Instant runFrom) { this.runFrom = runFrom; }
     public void setRunTill(Instant runTill) { this.runTill = runTill; }

@@ -1,7 +1,6 @@
 package tilbud.dto;
 
 import tilbud.entity.Catalog;
-import tilbud.entity.CatalogType;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +11,7 @@ public class CatalogResponse {
     private String catalogId;
     private ChainSummary chain;
     private String label;
-    private CatalogType catalogType;
+    private String catalogType;
     private List<String> categoryIds;
     private Instant runFrom;
     private Instant runTill;
@@ -36,7 +35,7 @@ public class CatalogResponse {
     public String getCatalogId() { return catalogId; }
     public ChainSummary getChain() { return chain; }
     public String getLabel() { return label; }
-    public CatalogType getCatalogType() { return catalogType; }
+    public String getCatalogType() { return catalogType; }
     public List<String> getCategoryIds() { return categoryIds; }
     public Instant getRunFrom() { return runFrom; }
     public Instant getRunTill() { return runTill; }
