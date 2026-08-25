@@ -55,6 +55,15 @@ Results:
 Sorted by: rank DESC, price ASC (cheapest first within same rank)
 ```
 
+### GIN Index
+
+Searches use a **GIN index** (Generalized Inverted Index) on `to_tsvector('simple', heading_normalized)`. A GIN index maps each word to the documents containing it — like a book index at the back of a textbook. This makes `@@` queries O(1) per word lookup regardless of table size, instead of scanning every row like `ILIKE` would.
+
+```sql
+CREATE INDEX idx_offers_heading_search
+    ON offers USING GIN(to_tsvector('simple', heading_normalized));
+```
+
 ## Data Source
 
 Public API: `api.etilbudsavis.dk/v2`
