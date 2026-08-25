@@ -209,14 +209,14 @@ public class OfferIngestionService {
     }
 
     private void fetchCatalogOffers(Chain chain, CatalogDto catalogDto) {
-        Catalog catalog = findOrCreateCatalog(chain, catalogDto);
-
         List<OfferDto> offers = client.getOffers(catalogDto.id());
 
         if (offers.isEmpty()) {
             log.debug("Catalog {} has 0 offers, skipping", catalogDto.id());
             return;
         }
+
+        Catalog catalog = findOrCreateCatalog(chain, catalogDto);
 
         // Deduplicate by offer ID
         List<OfferDto> uniqueOffers = offers.stream()
@@ -234,7 +234,7 @@ public class OfferIngestionService {
 
         // Insert new offers
         for (OfferDto offerDto : uniqueOffers) {
-           Offer offer = mapToOffer(offerDto, chain, catalog);
+            Offer offer = mapToOffer(offerDto, chain, catalog);
             offerRepository.save(offer);
         }
 
@@ -262,18 +262,11 @@ public class OfferIngestionService {
     }
 
     private boolean isWeeklyCatalog(CatalogDto catalog) {
-        if (catalog.label() == null) {
-            return false;
-        }
-
-        boolean containsUge = catalog.label().toLowerCase().contains("uge");
-
+        if (catalog.runFrom() == null || catalog.runTill() == null) return false;
         Instant runFrom = parseInstant(catalog.runFrom());
         Instant runTill = parseInstant(catalog.runTill());
         long days = ChronoUnit.DAYS.between(runFrom, runTill);
-        boolean shortDuration = days <= MAX_CATALOG_DURATION_DAYS;
-
-        return containsUge && shortDuration;
+        return days <= MAX_CATALOG_DURATION_DAYS;
     }
 
     private Offer mapToOffer(OfferDto dto, Chain chain, Catalog catalog) {
