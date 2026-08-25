@@ -25,6 +25,9 @@ import tilbud.repository.OfferRepository;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +41,12 @@ public class OfferIngestionService {
 
     private static final Logger log = LoggerFactory.getLogger(OfferIngestionService.class);
     private static final long MAX_CATALOG_DURATION_DAYS = 14;
+    private static final DateTimeFormatter API_DATE_FORMAT = new DateTimeFormatterBuilder()
+        .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
+        .optionalStart().appendOffset("+HHMM", "+0000").optionalEnd()
+        .optionalStart().appendOffset("+HH", "Z").optionalEnd()
+        .toFormatter();
 
     private final EtilbudsavisClient client;
     private final ChainRepository chainRepository;
@@ -244,8 +253,8 @@ public class OfferIngestionService {
         return catalogRepository.findByCatalogId(dto.id())
             .orElseGet(() -> {
                 Catalog catalog = new Catalog(dto.id(), chain, dto.label());
-                catalog.setRunFrom(Instant.parse(dto.runFrom()));
-                catalog.setRunTill(Instant.parse(dto.runTill()));
+                catalog.setRunFrom(parseInstant(dto.runFrom()));
+                catalog.setRunTill(parseInstant(dto.runTill()));
                 catalog.setOfferCount(dto.offerCount());
                 catalog.setCategoryIds(dto.categoryIds());
                 return catalogRepository.save(catalog);
@@ -259,8 +268,8 @@ public class OfferIngestionService {
 
         boolean containsUge = catalog.label().toLowerCase().contains("uge");
 
-        Instant runFrom = Instant.parse(catalog.runFrom());
-        Instant runTill = Instant.parse(catalog.runTill());
+        Instant runFrom = parseInstant(catalog.runFrom());
+        Instant runTill = parseInstant(catalog.runTill());
         long days = ChronoUnit.DAYS.between(runFrom, runTill);
         boolean shortDuration = days <= MAX_CATALOG_DURATION_DAYS;
 
@@ -272,8 +281,8 @@ public class OfferIngestionService {
         offer.setDescription(dto.description());
         offer.setPrePrice(dto.pricing().prePrice());
         offer.setCatalogPage(dto.catalogPage());
-        offer.setRunFrom(Instant.parse(dto.runFrom()));
-        offer.setRunTill(Instant.parse(dto.runTill()));
+        offer.setRunFrom(parseInstant(dto.runFrom()));
+        offer.setRunTill(parseInstant(dto.runTill()));
         offer.setHeadingNormalized(dto.heading().toLowerCase().replaceAll("[^a-z0-9æøå]", " "));
 
         if (dto.quantity() != null) {
@@ -292,6 +301,10 @@ public class OfferIngestionService {
         } catch (Exception e) {
             return "{}";
         }
+    }
+
+    private Instant parseInstant(String dateTime) {
+        return OffsetDateTime.parse(dateTime, API_DATE_FORMAT).toInstant();
     }
 
     public boolean isRunning() {
