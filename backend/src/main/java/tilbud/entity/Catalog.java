@@ -2,7 +2,6 @@ package tilbud.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -26,8 +25,8 @@ public class Catalog {
     @Column(name = "catalog_type", length = 20)
     private String catalogType;
 
-    @Column(name = "category_ids")
-    private List<String> categoryIds;
+    @Column(name = "category_ids", columnDefinition = "TEXT")
+    private String categoryIds;
 
     @Column(name = "run_from")
     private Instant runFrom;
@@ -57,7 +56,7 @@ public class Catalog {
     public Chain getChain() { return chain; }
     public String getLabel() { return label; }
     public String getCatalogType() { return catalogType; }
-    public List<String> getCategoryIds() { return categoryIds; }
+    public String getCategoryIds() { return categoryIds; }
     public Instant getRunFrom() { return runFrom; }
     public Instant getRunTill() { return runTill; }
     public Integer getOfferCount() { return offerCount; }
@@ -65,7 +64,7 @@ public class Catalog {
     public Instant getCreatedAt() { return createdAt; }
 
     public void setCatalogType(String catalogType) { this.catalogType = catalogType; }
-    public void setCategoryIds(List<String> categoryIds) { this.categoryIds = categoryIds; }
+    public void setCategoryIds(String categoryIds) { this.categoryIds = categoryIds; }
     public void setRunFrom(Instant runFrom) { this.runFrom = runFrom; }
     public void setRunTill(Instant runTill) { this.runTill = runTill; }
     public void setOfferCount(Integer offerCount) { this.offerCount = offerCount; }

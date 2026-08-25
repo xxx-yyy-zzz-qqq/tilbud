@@ -256,7 +256,7 @@ public class OfferIngestionService {
                 catalog.setRunFrom(parseInstant(dto.runFrom()));
                 catalog.setRunTill(parseInstant(dto.runTill()));
                 catalog.setOfferCount(dto.offerCount());
-                catalog.setCategoryIds(dto.categoryIds());
+                catalog.setCategoryIds(dto.categoryIds() != null ? new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(dto.categoryIds()).toString() : null);
                 return catalogRepository.save(catalog);
             });
     }

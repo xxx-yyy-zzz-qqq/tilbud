@@ -131,7 +131,7 @@ public class OfferService {
 
         if (query.getCategory() != null && !query.getCategory().isBlank()) {
             Catalog catalog = offer.getCatalog();
-            if (catalog.getCategoryIds() == null || !catalog.getCategoryIds().contains(query.getCategory())) {
+            if (catalog.getCategoryIds() == null || !catalog.getCategoryIds().contains("\"" + query.getCategory() + "\"")) {
                 return false;
             }
         }

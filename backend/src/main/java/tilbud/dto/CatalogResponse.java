@@ -1,11 +1,15 @@
 package tilbud.dto;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import tilbud.entity.Catalog;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 public class CatalogResponse {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private UUID id;
     private String catalogId;
@@ -24,11 +28,20 @@ public class CatalogResponse {
         r.chain = ChainSummary.from(catalog.getChain());
         r.label = catalog.getLabel();
         r.catalogType = catalog.getCatalogType();
-        r.categoryIds = catalog.getCategoryIds();
+        r.categoryIds = parseCategoryIds(catalog.getCategoryIds());
         r.runFrom = catalog.getRunFrom();
         r.runTill = catalog.getRunTill();
         r.offerCount = catalog.getOfferCount();
         return r;
+    }
+
+    private static List<String> parseCategoryIds(String json) {
+        if (json == null || json.isBlank()) return List.of();
+        try {
+            return mapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     public UUID getId() { return id; }
