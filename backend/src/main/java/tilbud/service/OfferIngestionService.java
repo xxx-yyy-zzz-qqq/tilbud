@@ -3,7 +3,7 @@ package tilbud.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -55,7 +55,6 @@ public class OfferIngestionService {
     private final CatalogRepository catalogRepository;
     private final OfferRepository offerRepository;
     private final MeterRegistry meterRegistry;
-    private final TransactionTemplate txTemplate;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicInteger lastChainsProcessed = new AtomicInteger(0);
@@ -69,14 +68,12 @@ public class OfferIngestionService {
             ChainRepository chainRepository,
             CatalogRepository catalogRepository,
             OfferRepository offerRepository,
-            MeterRegistry meterRegistry,
-            TransactionTemplate txTemplate) {
+            MeterRegistry meterRegistry) {
         this.client = client;
         this.chainRepository = chainRepository;
         this.catalogRepository = catalogRepository;
         this.offerRepository = offerRepository;
         this.meterRegistry = meterRegistry;
-        this.txTemplate = txTemplate;
     }
 
     @Scheduled(cron = "0 0 5,17 * * *")
@@ -211,10 +208,9 @@ public class OfferIngestionService {
         deleteStaleCatalogs(chain, seenCatalogIds);
     }
 
-    private void deleteStaleCatalogs(Chain chain, Set<String> seenCatalogIds) {
-        txTemplate.executeWithoutResult(status ->
-            catalogRepository.deleteByChainAndCatalogIdNotIn(chain, seenCatalogIds)
-        );
+    @Transactional
+    public void deleteStaleCatalogs(Chain chain, Set<String> seenCatalogIds) {
+        catalogRepository.deleteByChainAndCatalogIdNotIn(chain, seenCatalogIds);
     }
 
     public void fetchChainFallback(Chain chain, Exception e) {
