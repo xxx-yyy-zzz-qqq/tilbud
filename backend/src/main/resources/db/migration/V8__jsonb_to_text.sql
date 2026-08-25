@@ -1,0 +1,2 @@
+ALTER TABLE offers ALTER COLUMN quantity TYPE TEXT USING quantity::TEXT;
+ALTER TABLE offers ALTER COLUMN images TYPE TEXT USING images::TEXT;

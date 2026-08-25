@@ -41,10 +41,8 @@ public class Offer {
     @Column(name = "catalog_page")
     private Integer catalogPage;
 
-    @Column(columnDefinition = "jsonb")
     private String quantity;
 
-    @Column(columnDefinition = "jsonb")
     private String images;
 
     @Column(name = "heading_normalized", length = 255)
