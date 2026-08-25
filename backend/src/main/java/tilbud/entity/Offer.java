@@ -47,6 +47,9 @@ public class Offer {
     @Column(columnDefinition = "jsonb")
     private String images;
 
+    @Column(name = "heading_normalized", length = 255)
+    private String headingNormalized;
+
     @Column(name = "run_from")
     private Instant runFrom;
 
@@ -72,6 +75,7 @@ public class Offer {
     public Catalog getCatalog() { return catalog; }
     public String getHeading() { return heading; }
     public String getDescription() { return description; }
+    public String getHeadingNormalized() { return headingNormalized; }
     public Integer getPrice() { return price; }
     public Integer getPrePrice() { return prePrice; }
     public String getCurrency() { return currency; }
@@ -82,6 +86,7 @@ public class Offer {
     public Instant getRunTill() { return runTill; }
     public Instant getCreatedAt() { return createdAt; }
 
+    public void setHeadingNormalized(String headingNormalized) { this.headingNormalized = headingNormalized; }
     public void setDescription(String description) { this.description = description; }
     public void setPrePrice(Integer prePrice) { this.prePrice = prePrice; }
     public void setCatalogPage(Integer catalogPage) { this.catalogPage = catalogPage; }

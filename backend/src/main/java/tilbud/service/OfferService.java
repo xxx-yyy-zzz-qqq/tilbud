@@ -3,7 +3,6 @@ package tilbud.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import tilbud.dto.OfferSearchQuery;
 import tilbud.entity.Catalog;
@@ -16,10 +15,11 @@ import tilbud.repository.OfferRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OfferService {
@@ -57,18 +57,49 @@ public class OfferService {
             throw new IllegalArgumentException("size must be between 1 and 100");
         }
 
-        List<Offer> allOffers = offerRepository.findAll();
-        List<Offer> filtered = new ArrayList<>();
+        int page = query.getPage() != null ? query.getPage() : 0;
+        int size = query.getSize() != null ? query.getSize() : 20;
 
-        for (Offer offer : allOffers) {
-            if (matchesQuery(offer, query)) {
-                filtered.add(offer);
+        List<Offer> results;
+        if (query.getQ() != null && !query.getQ().isBlank()) {
+            String tsQuery = buildTsQuery(query.getQ());
+            UUID chainId = null;
+            if (query.getChain() != null && !query.getChain().isEmpty()) {
+                // For single chain filter, pass it directly
+                // For multiple chains, we'll filter in post-processing
+                if (query.getChain().size() == 1) {
+                    chainId = chainRepository.findByDealerId(query.getChain().get(0))
+                        .map(Chain::getId).orElse(null);
+                }
             }
+            results = offerRepository.searchWithFilters(tsQuery, chainId, query.getMinPrice(), query.getMaxPrice());
+
+            // Post-filter for multiple chains
+            if (query.getChain() != null && query.getChain().size() > 1) {
+                results = results.stream()
+                    .filter(o -> query.getChain().contains(o.getChain().getDealerId()))
+                    .collect(Collectors.toList());
+            }
+        } else {
+            // No text search — use in-memory filtering for other criteria
+            List<Offer> allOffers = offerRepository.findAll();
+            results = allOffers.stream()
+                .filter(o -> matchesFilters(o, query))
+                .collect(Collectors.toList());
         }
 
-        // Sort
-        if (query.getSort() != null) {
-            filtered.sort((a, b) -> switch (query.getSort()) {
+        // Sort (DB search already sorts by rank DESC, price ASC)
+        if (query.getQ() == null || query.getQ().isBlank()) {
+            results.sort((a, b) -> switch (query.getSort() != null ? query.getSort() : "date_desc") {
+                case "price_asc" -> Integer.compare(a.getPrice(), b.getPrice());
+                case "price_desc" -> Integer.compare(b.getPrice(), a.getPrice());
+                case "date_asc" -> compareNullable(a.getRunFrom(), b.getRunFrom());
+                case "date_desc" -> compareNullable(b.getRunFrom(), a.getRunFrom());
+                default -> compareNullable(b.getRunFrom(), a.getRunFrom());
+            });
+        } else if (query.getSort() != null) {
+            // Override DB sort with user-specified sort
+            results.sort((a, b) -> switch (query.getSort()) {
                 case "price_asc" -> Integer.compare(a.getPrice(), b.getPrice());
                 case "price_desc" -> Integer.compare(b.getPrice(), a.getPrice());
                 case "date_asc" -> compareNullable(a.getRunFrom(), b.getRunFrom());
@@ -76,34 +107,26 @@ public class OfferService {
                 case "relevance" -> compareNullable(b.getCreatedAt(), a.getCreatedAt());
                 default -> throw new IllegalArgumentException("Invalid sort value: " + query.getSort());
             });
-        } else if (query.getQ() != null && !query.getQ().isBlank()) {
-            filtered.sort((a, b) -> compareNullable(b.getCreatedAt(), a.getCreatedAt()));
-        } else {
-            filtered.sort((a, b) -> compareNullable(b.getCreatedAt(), a.getCreatedAt()));
         }
 
         // Paginate
-        int page = query.getPage() != null ? query.getPage() : 0;
-        int size = query.getSize() != null ? query.getSize() : 20;
-        Pageable pageable = PageRequest.of(page, size);
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), filtered.size());
-        List<Offer> pageContent = start < filtered.size() ? filtered.subList(start, end) : List.of();
+        int start = page * size;
+        int end = Math.min(start + size, results.size());
+        List<Offer> pageContent = start < results.size() ? results.subList(start, end) : List.of();
 
-        return new PageImpl<>(pageContent, pageable, filtered.size());
+        return new PageImpl<>(pageContent, PageRequest.of(page, size), results.size());
     }
 
-    private boolean matchesQuery(Offer offer, OfferSearchQuery query) {
-        if (query.getQ() != null && !query.getQ().isBlank()) {
-            String searchLower = query.getQ().toLowerCase();
-            boolean headingMatch = offer.getHeading() != null && offer.getHeading().toLowerCase().contains(searchLower);
-            boolean descMatch = offer.getDescription() != null && offer.getDescription().toLowerCase().contains(searchLower);
-            if (!headingMatch && !descMatch) return false;
-        }
+    private String buildTsQuery(String input) {
+        return Arrays.stream(input.toLowerCase().split("\\s+"))
+            .map(w -> w.replaceAll("[^a-zA-Z0-9æøåÆØÅ]", ""))
+            .filter(w -> !w.isEmpty())
+            .collect(Collectors.joining(" | "));
+    }
 
+    private boolean matchesFilters(Offer offer, OfferSearchQuery query) {
         if (query.getChain() != null && !query.getChain().isEmpty()) {
-            boolean chainMatch = query.getChain().contains(offer.getChain().getDealerId());
-            if (!chainMatch) return false;
+            if (!query.getChain().contains(offer.getChain().getDealerId())) return false;
         }
 
         if (query.getCategory() != null && !query.getCategory().isBlank()) {

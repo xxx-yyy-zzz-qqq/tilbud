@@ -18,6 +18,43 @@ Search engine for Danish grocery store weekly offers (tilbudsaviser).
                     └──────────────┘
 ```
 
+## Search
+
+The search uses PostgreSQL full-text search on offer headings.
+
+### How It Works
+
+1. **User input**: One or more words (e.g., "arla minimælk")
+2. **Normalization**: Input is lowercased, punctuation stripped → `arla | minimælk`
+3. **Matching**: OR logic — any offer matching **one or more** words appears in results
+4. **Ranking**: Offers matching more words rank higher (`ts_rank_cd` score)
+5. **Sorting**: Within same rank, sorted by price ascending (cheapest first)
+
+### PostgreSQL Functions Used
+
+| Function | Purpose |
+|----------|---------|
+| `to_tsvector('simple', text)` | Converts text to normalized tokens (lowercase, stripped) |
+| `to_tsquery('simple', 'word1 \| word2')` | Converts search words to query format with OR operator |
+| `@@` operator | Matches documents against query — returns true if any word matches |
+| `ts_rank_cd()` | Computes rank score (0-1) based on term density — more matching words = higher rank |
+
+### Example
+
+```
+Search: "arla minimælk"
+
+Normalized: 'arla' | 'minimælk'
+
+Results:
+1. "Arla Minimælk 1L" — matches both words (rank: 0.6)
+2. "Arla D-mælk" — matches "arla" (rank: 0.3)
+3. "Minimælk 0.5L" — matches "minimælk" (rank: 0.3)
+4. "Arla Cream Cheese" — matches "arla" (rank: 0.3)
+
+Sorted by: rank DESC, price ASC (cheapest first within same rank)
+```
+
 ## Data Source
 
 Public API: `api.etilbudsavis.dk/v2`
@@ -174,7 +211,7 @@ cp .env.example .env
 ```
 
 This starts:
-- **PostgreSQL** on `localhost:5432`
+- **PostgreSQL** on `localhost:5433`
 - **Spring Boot backend** on `localhost:8080`
 - **React frontend** on `localhost:5173`
 
@@ -182,26 +219,26 @@ This starts:
 
 ```bash
 # Start all services
-docker-compose up
+docker compose up
 
 # Start in background
-docker-compose up -d
+docker compose up -d
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
+docker compose logs -f backend
+docker compose logs -f frontend
 
 # Rebuild after changes
-docker-compose up --build
+docker compose up --build
 
 # Run database migrations manually
-docker-compose exec backend java -jar app.jar
+docker compose exec backend java -jar app.jar
 
 # Access PostgreSQL
-docker-compose exec db psql -U tilbud -d tilbud
+docker compose exec db psql -U tilbud -d tilbud
 ```
 
 ### Frontend Development

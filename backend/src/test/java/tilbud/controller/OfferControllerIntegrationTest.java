@@ -51,6 +51,49 @@ class OfferControllerIntegrationTest {
     }
 
     @Test
+    void searchWithEmptyQueryReturnsAllOffers() throws Exception {
+        mockMvc.perform(get("/api/offers/search"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray());
+    }
+
+    @Test
+    void searchAcceptsValidSortOptions() throws Exception {
+        mockMvc.perform(get("/api/offers/search")
+                .param("sort", "price_asc"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/offers/search")
+                .param("sort", "price_desc"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/offers/search")
+                .param("sort", "date_asc"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/offers/search")
+                .param("sort", "date_desc"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void searchAcceptsPaginationParams() throws Exception {
+        mockMvc.perform(get("/api/offers/search")
+                .param("page", "0")
+                .param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.size").value(10));
+    }
+
+    @Test
+    void searchAcceptsPriceRangeFilter() throws Exception {
+        mockMvc.perform(get("/api/offers/search")
+                .param("minPrice", "10")
+                .param("maxPrice", "100"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
     void getByIdReturns404WhenNotFound() throws Exception {
         mockMvc.perform(get("/api/offers/00000000-0000-0000-0000-000000000000"))
             .andExpect(status().isNotFound());
