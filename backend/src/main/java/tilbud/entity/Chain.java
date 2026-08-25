@@ -49,7 +49,9 @@ public class Chain {
     public String getCountry() { return country; }
     public Instant getCreatedAt() { return createdAt; }
 
+    public void setName(String name) { this.name = name; }
     public void setWebsite(String website) { this.website = website; }
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
     public void setColor(String color) { this.color = color; }
+    public void setCountry(String country) { this.country = country; }
 }

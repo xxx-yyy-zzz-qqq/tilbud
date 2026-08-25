@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tilbud.client.CatalogDto;
+import tilbud.client.DealerDto;
 import tilbud.client.EtilbudsavisClient;
 import tilbud.client.OfferDto;
 import tilbud.entity.Catalog;
@@ -92,6 +93,8 @@ public class OfferIngestionService {
         lastErrors.set(0);
 
         try {
+            discoverDealers();
+
             List<Chain> chains = chainRepository.findAll();
             log.info("Fetching {} chains", chains.size());
 
@@ -121,6 +124,54 @@ public class OfferIngestionService {
         } finally {
             running.set(false);
         }
+    }
+
+    private void discoverDealers() {
+        log.info("Discovering dealers from API");
+        List<DealerDto> dealers = client.getDealers();
+
+        int created = 0;
+        int updated = 0;
+
+        for (DealerDto dealer : dealers) {
+            Chain existing = chainRepository.findByDealerId(dealer.id()).orElse(null);
+
+            if (existing == null) {
+                Chain chain = new Chain(dealer.id(), dealer.name());
+                chain.setWebsite(dealer.website());
+                chain.setLogoUrl(dealer.logo());
+                chain.setColor(dealer.color());
+                if (dealer.country() != null) {
+                    chain.setCountry(dealer.country().id());
+                }
+                chainRepository.save(chain);
+                created++;
+            } else {
+                boolean changed = false;
+                if (dealer.name() != null && !dealer.name().equals(existing.getName())) {
+                    existing.setName(dealer.name());
+                    changed = true;
+                }
+                if (dealer.website() != null && !dealer.website().equals(existing.getWebsite())) {
+                    existing.setWebsite(dealer.website());
+                    changed = true;
+                }
+                if (dealer.logo() != null && !dealer.logo().equals(existing.getLogoUrl())) {
+                    existing.setLogoUrl(dealer.logo());
+                    changed = true;
+                }
+                if (dealer.color() != null && !dealer.color().equals(existing.getColor())) {
+                    existing.setColor(dealer.color());
+                    changed = true;
+                }
+                if (changed) {
+                    chainRepository.save(existing);
+                    updated++;
+                }
+            }
+        }
+
+        log.info("Dealer discovery: {} created, {} updated, {} total", created, updated, dealers.size());
     }
 
     @CircuitBreaker(name = "etilbudsavis", fallbackMethod = "fetchChainFallback")

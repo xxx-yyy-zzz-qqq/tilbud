@@ -74,4 +74,37 @@ public class EtilbudsavisClient {
 
         return allOffers;
     }
+
+    public List<DealerDto> getDealers() {
+        List<DealerDto> allDealers = new ArrayList<>();
+        int offset = 0;
+
+        while (true) {
+            String url = UriComponentsBuilder.fromPath("/dealers")
+                .queryParam("limit", PAGE_SIZE)
+                .queryParam("offset", offset)
+                .toUriString();
+
+            log.debug("Fetching dealers offset {}", offset);
+            DealerDto[] page = restClient.get()
+                .uri(url)
+                .retrieve()
+                .body(DealerDto[].class);
+
+            if (page == null || page.length == 0) {
+                break;
+            }
+
+            allDealers.addAll(List.of(page));
+
+            if (page.length < PAGE_SIZE) {
+                break;
+            }
+
+            offset += PAGE_SIZE;
+        }
+
+        log.info("Fetched {} dealers from API", allDealers.size());
+        return allDealers;
+    }
 }
