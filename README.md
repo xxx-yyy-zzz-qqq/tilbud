@@ -126,19 +126,68 @@ Comparison of API offers (filtered by `catalog_ids`) against actual PDF flyers:
 
 ## Fetch Strategy
 
-1. **Daily at 06:00**: Check for new catalogs
-   - `GET /v2/catalogs?dealer_ids={chain}`
-   - Compare `run_from` with last fetched
-   - If new catalog exists, proceed to step 2
+Offers are fetched automatically on application startup and twice daily at 05:00 and 17:00 UTC.
 
-2. **Fetch offers per catalog**:
-   - `GET /v2/offers?catalog_ids={catalog_id}&limit=100`
-   - Paginate with `offset` until empty response
-   - Store in `offers` table
+### Schedule
 
-3. **Cleanup** (optional):
-   - Archive offers where `run_till < NOW()`
-   - Keep for historical analysis
+| Trigger | Time | Purpose |
+|---------|------|---------|
+| Application startup | On boot | Load initial data |
+| Cron #1 | 05:00 UTC (07:00 Danish) | Catch Thursday catalogs |
+| Cron #2 | 17:00 UTC (19:00 Danish) | Catch Saturday catalogs |
+
+### Catalog Filtering
+
+Not all catalogs are weekly promotional catalogs. We filter using:
+- **Label contains "uge"** (case-insensitive) — "uge" means "week" in Danish
+- **Duration ≤ 14 days** — excludes long-running catalogs (e.g., "Fast lav pris" at 243 days)
+
+This catches weekly catalogs while excluding magazines and seasonal catalogs.
+
+### Delete Strategy
+
+Per-catalog delete-and-replace:
+1. Delete all existing offers for a catalog
+2. Fetch new offers from API
+3. If new offers > 0: insert them
+4. If new offers = 0: skip catalog (keep old data)
+
+### Parallelism
+
+All 47 chains are fetched concurrently using Java virtual threads (no semaphore limit).
+
+### Resilience
+
+- **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
+- **Circuit breaker**: Per chain — 3 consecutive failures → open for 60s → half-open → retry once
+- **Manual re-fetch**: `POST /api/v1/ingestion/trigger` (frontend button)
+
+## Observability
+
+### Health Checks
+
+Actuator exposes `/actuator/health` with database connectivity status.
+
+### Metrics (Prometheus)
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `etilbudsavis_fetch_duration_seconds` | Histogram | Time to fetch one chain |
+| `etilbudsavis_offers_fetched_total` | Counter | Total offers fetched |
+| `etilbudsavis_offers_inserted_total` | Counter | New offers inserted |
+| `etilbudsavis_fetch_errors_total` | Counter | Fetch errors |
+| `etilbudsavis_fetch_in_progress` | Gauge | 1 if fetch running |
+
+Histogram buckets: `[30, 60, 120, 300, 600]` seconds
+
+### Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/v1/ingestion/trigger` | POST | Trigger manual re-fetch |
+| `/api/v1/ingestion/status` | GET | Get fetch status and last run results |
+| `/actuator/health` | GET | Health check |
+| `/actuator/prometheus` | GET | Prometheus metrics |
 
 ## API Response Shape
 
@@ -194,6 +243,7 @@ Comparison of API offers (filtered by `catalog_ids`) against actual PDF flyers:
 - **Frontend**: React 19, TypeScript, Vite
 - **Docker**: Docker Compose
 - **Testing**: JUnit 5, H2, MockMvc
+- **Observability**: Micrometer, Prometheus, Resilience4j
 - **CI/CD**: GitHub Actions, GitHub Container Registry
 - **API Collection**: Bruno
 
