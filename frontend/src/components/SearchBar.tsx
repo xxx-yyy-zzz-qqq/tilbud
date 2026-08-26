@@ -1,4 +1,4 @@
-import { useState } from 'react';
+    import { useState } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -10,9 +10,7 @@ export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (value.trim()) {
-      onSearch(value.trim());
-    }
+    onSearch(value.trim());
   };
 
   return (

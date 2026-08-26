@@ -109,6 +109,11 @@ export function SearchPage() {
 
   const doSearch = async (q: string) => {
     setQuery(q);
+    if (!q) {
+      setOffers([]);
+      setSearched(false);
+      return;
+    }
     setLoading(true);
     setSearched(true);
     try {
