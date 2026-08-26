@@ -72,6 +72,7 @@ Public API: `api.etilbudsavis.dk/v2`
 
 | Endpoint | Purpose | Auth |
 |----------|---------|------|
+| `GET /v2/dealers` | Get all dealers (chains) | None |
 | `GET /v2/catalogs?dealer_ids={chain}` | Get catalogs for a chain | None |
 | `GET /v2/offers?catalog_ids={catalog_id}` | Get offers for a catalog | None |
 
@@ -113,13 +114,11 @@ Actuator exposes `/actuator/health` with database connectivity status.
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `etilbudsavis_fetch_duration_seconds` | Histogram | Time to fetch one chain |
+| `etilbudsavis_fetch_duration_seconds` | Timer | Time to fetch all chains |
+| `etilbudsavis_chain_fetch_duration` | Timer | Time to fetch one chain |
 | `etilbudsavis_offers_fetched_total` | Counter | Total offers fetched |
 | `etilbudsavis_offers_inserted_total` | Counter | New offers inserted |
 | `etilbudsavis_fetch_errors_total` | Counter | Fetch errors |
-| `etilbudsavis_fetch_in_progress` | Gauge | 1 if fetch running |
-
-Histogram buckets: `[30, 60, 120, 300, 600]` seconds
 
 ### Endpoints
 
@@ -130,7 +129,7 @@ Histogram buckets: `[30, 60, 120, 300, 600]` seconds
 | `/actuator/health` | GET | Health check |
 | `/actuator/prometheus` | GET | Prometheus metrics |
 
-## API Response Shape
+## External API Shape
 
 ### Offer
 
@@ -181,12 +180,19 @@ Histogram buckets: `[30, 60, 120, 300, 600]` seconds
 - **Backend**: Java 25, Spring Boot 4.1.0, Spring MVC, Virtual Threads
 - **Build**: Gradle 9.7.1 (Kotlin DSL)
 - **Database**: PostgreSQL 16, Flyway migrations
-- **Frontend**: React 19, TypeScript, Vite
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, DaisyUI
 - **Docker**: Docker Compose
 - **Testing**: JUnit 5, H2, MockMvc
 - **Observability**: Micrometer, Prometheus, Resilience4j
 - **CI/CD**: GitHub Actions, GitHub Container Registry
 - **API Collection**: Bruno
+
+## Frontend
+
+React SPA with Tailwind CSS and DaisyUI. Two main pages:
+
+- **Landing page** (`/`) — chain table with logos, catalog count, offer count. Date filter narrows to chains with offers valid on selected date. Search navigates to results page.
+- **Search page** (`/search?q=...&date=...`) — offer table with image, heading, price, validity, chain. Sortable columns, client-side date filtering, offer deduplication.
 
 ## Local Development
 
