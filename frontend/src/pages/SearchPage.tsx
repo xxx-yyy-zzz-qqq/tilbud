@@ -86,7 +86,6 @@ export function SearchPage() {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialDate = searchParams.get('date') || '';
-  const initialExclude = searchParams.get('exclude');
 
   const [query, setQuery] = useState(initialQuery);
   const [offers, setOffers] = useState<OfferResponse[]>([]);
@@ -95,9 +94,11 @@ export function SearchPage() {
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [filterDate, setFilterDate] = useState<string>(initialDate);
-  const [excludedChains, setExcludedChains] = useState<Set<string>>(
-    initialExclude ? new Set(initialExclude.split(',')) : new Set()
-  );
+  const [excludedChains, setExcludedChains] = useState<Map<string, string>>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const exclude = params.get('exclude');
+    return exclude ? new Map(exclude.split(',').map((id) => [id, ''])) : new Map();
+  });
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
 
@@ -177,11 +178,31 @@ export function SearchPage() {
     }
   }, []);
 
+  // Fill in chain names from offers after they load (handles URL-excluded chains)
+  useEffect(() => {
+    if (offers.length > 0) {
+      setExcludedChains((prev) => {
+        let changed = false;
+        const next = new Map(prev);
+        for (const [dealerId, name] of prev) {
+          if (!name) {
+            const offer = offers.find((o) => o.chain.dealerId === dealerId);
+            if (offer) {
+              next.set(dealerId, offer.chain.name);
+              changed = true;
+            }
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+  }, [offers]);
+
   const handleSearch = (q: string) => {
     const params = new URLSearchParams();
     params.set('q', q);
     if (filterDate) params.set('date', filterDate);
-    if (excludedChains.size > 0) params.set('exclude', [...excludedChains].join(','));
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains.keys()].join(','));
     navigate(`/search?${params.toString()}`, { replace: true });
     doSearch(q);
   };
@@ -192,7 +213,7 @@ export function SearchPage() {
         <button className="btn btn-outline btn-sm" onClick={() => {
           const params = new URLSearchParams();
           if (filterDate) params.set('date', filterDate);
-          if (excludedChains.size > 0) params.set('exclude', [...excludedChains].join(','));
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains.keys()].join(','));
           const qs = params.toString();
           navigate(qs ? `/?${qs}` : '/');
         }}>
@@ -218,17 +239,15 @@ export function SearchPage() {
 
       {excludedChains.size > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {[...excludedChains].map((dealerId) => {
-            const offer = offers.find((o) => o.chain.dealerId === dealerId);
-            const name = offer?.chain.name || dealerId;
+          {[...excludedChains.entries()].map(([dealerId, name]) => {
             return (
               <span key={dealerId} className="badge badge-outline gap-1">
-                {name}
+                {name || dealerId}
                 <button
                   className="text-xs cursor-pointer"
                   onClick={() => {
                     setExcludedChains((prev) => {
-                      const next = new Set(prev);
+                      const next = new Map(prev);
                       next.delete(dealerId);
                       return next;
                     });
@@ -290,8 +309,8 @@ export function SearchPage() {
                         title={`Skjul ${offer.chain.name}`}
                         onClick={() => {
                           setExcludedChains((prev) => {
-                            const next = new Set(prev);
-                            next.add(offer.chain.dealerId);
+                            const next = new Map(prev);
+                            next.set(offer.chain.dealerId, offer.chain.name);
                             return next;
                           });
                         }}

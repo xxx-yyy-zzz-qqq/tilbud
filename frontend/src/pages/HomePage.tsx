@@ -26,10 +26,10 @@ export function HomePage() {
     const params = new URLSearchParams(window.location.search);
     return params.get('date') || '';
   });
-  const [excludedChains, setExcludedChains] = useState<Set<string>>(() => {
+  const [excludedChains, setExcludedChains] = useState<Map<string, string>>(() => {
     const params = new URLSearchParams(window.location.search);
     const exclude = params.get('exclude');
-    return exclude ? new Set(exclude.split(',')) : new Set();
+    return exclude ? new Map(exclude.split(',').map((id) => [id, ''])) : new Map();
   });
 
   const loadChains = useCallback(async () => {
@@ -82,7 +82,7 @@ export function HomePage() {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (filterDate) params.set('date', filterDate);
-    if (excludedChains.size > 0) params.set('exclude', [...excludedChains].join(','));
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains.keys()].join(','));
     navigate(`/search?${params.toString()}`);
   };
 
@@ -149,17 +149,17 @@ export function HomePage() {
 
       {excludedChains.size > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {[...excludedChains].map((dealerId) => {
+          {[...excludedChains.entries()].map(([dealerId]) => {
             const chain = chains.find((c) => c.dealerId === dealerId);
-            if (!chain) return null;
+            const name = chain?.name || excludedChains.get(dealerId) || dealerId;
             return (
               <span key={dealerId} className="badge badge-outline gap-1">
-                {chain.name}
+                {name}
                 <button
                   className="text-xs cursor-pointer"
                   onClick={() => {
                     setExcludedChains((prev) => {
-                      const next = new Set(prev);
+                      const next = new Map(prev);
                       next.delete(dealerId);
                       return next;
                     });
@@ -183,7 +183,7 @@ export function HomePage() {
         <table className="table table-zebra w-full [&_td]:py-1 [&_th]:py-1">
           <thead>
             <tr>
-              <th className="w-20">Fravælg</th>
+              <th className="w-12">Fravælg</th>
               <th>Kæde</th>
               <th>Tilbudsperiode</th>
               <th className="text-right">Kataloger</th>
@@ -193,19 +193,21 @@ export function HomePage() {
           <tbody>
             {filteredChains.map((chain) => (
               <tr key={chain.dealerId} className="leading-none overflow-visible">
+                <td className="text-center">
+                  <button
+                    className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none"
+                    title={`Skjul ${chain.name}`}
+                    onClick={() => {
+                      setExcludedChains((prev) => {
+                        const next = new Map(prev);
+                        next.set(chain.dealerId, chain.name);
+                        return next;
+                      });
+                    }}
+                  >−</button>
+                </td>
                 <td className="relative overflow-visible">
-                  <div className="flex items-center gap-1">
-                    <button
-                      className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none shrink-0"
-                      title={`Skjul ${chain.name}`}
-                      onClick={() => {
-                        setExcludedChains((prev) => {
-                          const next = new Set(prev);
-                          next.add(chain.dealerId);
-                          return next;
-                        });
-                      }}
-                    >−</button>
+                  <div className="flex items-center gap-2">
                     {chain.logoUrl ? (
                       <img
                         src={chain.logoUrl}
@@ -220,9 +222,9 @@ export function HomePage() {
                         {chain.name.charAt(0)}
                       </div>
                     )}
+                    <span className="font-medium">{chain.name}</span>
                   </div>
                 </td>
-                <td className="font-medium">{chain.name}</td>
                 <td>
                   {chain.catalog
                     ? formatPeriod(chain.catalog.runFrom, chain.catalog.runTill)
