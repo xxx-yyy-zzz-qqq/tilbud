@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchChains, fetchCatalogs, fetchIngestionStatus, triggerIngestion } from '../api';
 import { LoadingBanner } from '../components/LoadingBanner';
@@ -22,6 +22,7 @@ export function HomePage() {
   const [status, setStatus] = useState<IngestionStatus | null>(null);
   const [chains, setChains] = useState<ChainWithCatalog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterDate, setFilterDate] = useState<string>('');
 
   const loadChains = useCallback(async () => {
     setLoading(true);
@@ -70,7 +71,10 @@ export function HomePage() {
   }, [loadChains]);
 
   const handleSearch = (query: string) => {
-    navigate(`/search?q=${encodeURIComponent(query)}`);
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (filterDate) params.set('date', filterDate);
+    navigate(`/search?${params.toString()}`);
   };
 
   const handleRefetch = async () => {
@@ -90,6 +94,17 @@ export function HomePage() {
     }
   };
 
+  const filteredChains = useMemo(() => {
+    if (!filterDate) return chains;
+    const d = new Date(filterDate);
+    return chains.filter((chain) => {
+      if (!chain.catalog) return false;
+      const from = new Date(chain.catalog.runFrom);
+      const till = new Date(chain.catalog.runTill);
+      return from <= d && d <= till;
+    });
+  }, [chains, filterDate]);
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
@@ -101,15 +116,30 @@ export function HomePage() {
 
       <LoadingBanner status={status} chainsWithOffers={chains.filter(c => c.offerCount > 0).length} />
 
-      <div className="mt-4 mb-6">
-        <SearchBar onSearch={handleSearch} />
+      <div className="mt-4 mb-6 flex items-center gap-4">
+        <div className="flex-1">
+          <SearchBar onSearch={handleSearch} />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm whitespace-nowrap" htmlFor="filter-date">Dato:</label>
+          <input
+            id="filter-date"
+            type="date"
+            className="input input-bordered input-sm"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+          {filterDate && (
+            <button className="btn btn-ghost btn-xs" onClick={() => setFilterDate('')}>Ryd</button>
+          )}
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
-      ) : chains.length === 0 ? (
+      ) : filteredChains.length === 0 ? (
         <div className="text-center py-12 text-base-content/60">
           Ingen kæder fundet
         </div>
@@ -125,7 +155,7 @@ export function HomePage() {
             </tr>
           </thead>
           <tbody>
-            {chains.map((chain) => (
+            {filteredChains.map((chain) => (
               <tr key={chain.dealerId} className="leading-none overflow-visible">
                 <td className="relative overflow-visible">
                   {chain.logoUrl ? (

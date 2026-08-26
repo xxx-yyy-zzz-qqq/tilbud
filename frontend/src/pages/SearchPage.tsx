@@ -57,6 +57,7 @@ export function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
+  const initialDate = searchParams.get('date') || '';
 
   const [query, setQuery] = useState(initialQuery);
   const [offers, setOffers] = useState<OfferResponse[]>([]);
@@ -64,7 +65,7 @@ export function SearchPage() {
   const [searched, setSearched] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
-  const [filterDate, setFilterDate] = useState<string>('');
+  const [filterDate, setFilterDate] = useState<string>(initialDate);
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
 
