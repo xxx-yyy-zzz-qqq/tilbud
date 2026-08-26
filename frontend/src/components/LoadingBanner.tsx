@@ -46,7 +46,7 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
             {r.errors > 0 && <span className="text-error">, {r.errors} fejl</span>}
           </div>
           <div className="text-xs opacity-70 mt-1">
-            Kæder med mange kataloger er lokale butikker med egne kataloger og lokale priser.
+            Kæder med mange kataloger dækker sandsynligvis over lokale butikkers egne kataloger med lokale priser.
           </div>
         </div>
       </div>
