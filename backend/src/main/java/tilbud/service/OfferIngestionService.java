@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tilbud.client.CatalogDto;
 import tilbud.client.DealerDto;
@@ -75,11 +74,6 @@ public class OfferIngestionService {
         this.meterRegistry = meterRegistry;
         this.jdbc = jdbc;
         this.entityManager = entityManager;
-    }
-
-    @Scheduled(cron = "0 0 5,17 * * *")
-    public void scheduledFetch() {
-        fetchAllChains();
     }
 
     @EventListener(ApplicationReadyEvent.class)

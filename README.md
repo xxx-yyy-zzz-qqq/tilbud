@@ -126,35 +126,33 @@ Comparison of API offers (filtered by `catalog_ids`) against actual PDF flyers:
 
 ## Fetch Strategy
 
-Offers are fetched automatically on application startup and twice daily at 05:00 and 17:00 UTC.
+Data is fetched from the external API once on application startup. No automatic scheduling — user triggers re-fetch manually via the frontend "Hent igen" button.
 
-### Schedule
+### Trigger
 
-| Trigger | Time | Purpose |
-|---------|------|---------|
-| Application startup | On boot | Load initial data |
-| Cron #1 | 05:00 UTC (07:00 Danish) | Catch Thursday catalogs |
-| Cron #2 | 17:00 UTC (19:00 Danish) | Catch Saturday catalogs |
+| Trigger | Purpose |
+|---------|---------|
+| Application startup | Load initial data |
+| Manual re-fetch | `POST /api/v1/ingestion/trigger` (frontend button) |
 
 ### Catalog Filtering
 
 Not all catalogs are weekly promotional catalogs. We filter using:
-- **Label contains "uge"** (case-insensitive) — "uge" means "week" in Danish
-- **Duration ≤ 14 days** — excludes long-running catalogs (e.g., "Fast lav pris" at 243 days)
+- **Duration ≥ 1 day** — excludes catalogs with no valid date range
 
-This catches weekly catalogs while excluding magazines and seasonal catalogs.
+All catalogs regardless of length are included (removed 14-day filter to support chains like CBC with 41-day catalogs).
 
 ### Delete Strategy
 
-Per-catalog delete-and-replace:
-1. Delete all existing offers for a catalog
-2. Fetch new offers from API
-3. If new offers > 0: insert them
-4. If new offers = 0: skip catalog (keep old data)
+Per-chain delete-all-then-insert:
+1. Delete ALL catalogs for a chain (via JdbcTemplate, bypasses Hibernate)
+2. Fetch weekly catalogs from API
+3. Create catalogs + insert offers only for non-empty results
+4. ON DELETE CASCADE handles offer cleanup
 
 ### Parallelism
 
-All 47 chains are fetched concurrently using Java virtual threads (no semaphore limit).
+All chains are fetched sequentially on a single virtual thread. Parallelization deferred (see issue #24).
 
 ### Resilience
 
@@ -200,7 +198,7 @@ Histogram buckets: `[30, 60, 120, 300, 600]` seconds
   "description": "Flere varianter. 1 kg. Max. 4 stk. pr. kunde pr. dag. Herefter er prisen 20,95 pr. stk. MAX. 4 STK. SKARP PRIS",
   "catalog_page": 1,
   "pricing": {
-    "price": 9,                    // price in øre
+    "price": 9,                    // price in kr (integer)
     "pre_price": 20.95,           // original price (nullable)
     "currency": "DKK"
   },
