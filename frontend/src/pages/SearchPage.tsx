@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchAllOffers } from '../api';
 import { SearchBar } from '../components/SearchBar';
@@ -22,6 +22,16 @@ function getImageUrl(images: string | null): string | null {
   try {
     const parsed = JSON.parse(images);
     return parsed.view || parsed.thumb || null;
+  } catch {
+    return null;
+  }
+}
+
+function getZoomUrl(images: string | null): string | null {
+  if (!images) return null;
+  try {
+    const parsed = JSON.parse(images);
+    return parsed.zoom || parsed.view || parsed.thumb || null;
   } catch {
     return null;
   }
@@ -54,6 +64,16 @@ export function SearchPage() {
   const [searched, setSearched] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') setZoomImage(null);
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const sortedOffers = useMemo(() => {
     const copy = [...offers];
@@ -161,6 +181,7 @@ export function SearchPage() {
             <tbody>
               {sortedOffers.map((offer) => {
                 const thumb = getImageUrl(offer.images);
+                const zoom = getZoomUrl(offer.images);
                 return (
                   <tr key={offer.id}>
                     <td>
@@ -168,7 +189,8 @@ export function SearchPage() {
                         <img
                           src={thumb}
                           alt={offer.heading}
-                          className="w-12 h-12 object-cover rounded"
+                          className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => zoom && setZoomImage({ src: zoom, alt: offer.heading })}
                         />
                       ) : (
                         <div className="w-12 h-12 bg-base-200 rounded flex items-center justify-center text-xs">
@@ -200,6 +222,24 @@ export function SearchPage() {
             </tbody>
           </table>
         </>
+      )}
+
+      {zoomImage && (
+        <dialog className="modal modal-open" onClick={() => setZoomImage(null)}>
+          <div className="modal-box max-w-2xl p-2" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={zoomImage.src}
+              alt={zoomImage.alt}
+              className="w-full rounded"
+            />
+            <div className="modal-action">
+              <button className="btn btn-sm" onClick={() => setZoomImage(null)}>Luk</button>
+            </div>
+          </div>
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setZoomImage(null)}>luk</button>
+          </form>
+        </dialog>
       )}
     </div>
   );
