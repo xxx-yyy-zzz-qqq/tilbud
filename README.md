@@ -18,6 +18,46 @@ Search engine for Danish grocery store weekly offers (tilbudsaviser).
                     └──────────────┘
 ```
 
+## Data Source
+
+Public API: `api.etilbudsavis.dk/v2`
+
+### Endpoints Used
+
+| Endpoint | Purpose | Auth |
+|----------|---------|------|
+| `GET /v2/dealers` | Get all dealers (chains) | None |
+| `GET /v2/catalogs?dealer_ids={chain}` | Get catalogs for a chain | None |
+| `GET /v2/offers?catalog_ids={catalog_id}` | Get offers for a catalog | None |
+
+## Fetch Strategy
+
+Data is fetched from the external API once on application startup. No automatic scheduling — user triggers re-fetch manually via the frontend "Hent igen" button.
+
+### Trigger
+
+| Trigger | Purpose |
+|---------|---------|
+| Application startup | Load initial data |
+| Manual re-fetch | `POST /api/v1/ingestion/trigger` (frontend button) |
+
+### Delete Strategy
+
+Per-chain delete-all-then-insert:
+1. Delete ALL catalogs for a chain (via JdbcTemplate, bypasses Hibernate)
+2. Fetch latest catalogs from API
+3. Create catalogs + insert offers only for non-empty results
+4. ON DELETE CASCADE handles offer cleanup
+
+### Parallelism
+
+All chains are fetched in parallel using virtual threads. Each chain gets its own virtual thread via `Executors.newVirtualThreadPerTaskExecutor()`. A semaphore limits concurrent API calls to avoid overwhelming the external API (which enforces HTTP/2 stream limits). The concurrency level is configurable via `ingestion.fetch-concurrency` (default:10). HikariCP connection pool is sized to match (default:15).
+
+### Resilience
+
+- **HTTP timeouts**: Connect 5s, Read 15s — no chain hangs forever
+- **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
+
 ## Frontend
 
 React SPA with Tailwind CSS and DaisyUI. Two main pages:
@@ -70,46 +110,6 @@ Searches use a **GIN index** (Generalized Inverted Index) on `to_tsvector('simpl
 CREATE INDEX idx_offers_heading_search
     ON offers USING GIN(to_tsvector('simple', heading_normalized));
 ```
-
-## Data Source
-
-Public API: `api.etilbudsavis.dk/v2`
-
-### Endpoints Used
-
-| Endpoint | Purpose | Auth |
-|----------|---------|------|
-| `GET /v2/dealers` | Get all dealers (chains) | None |
-| `GET /v2/catalogs?dealer_ids={chain}` | Get catalogs for a chain | None |
-| `GET /v2/offers?catalog_ids={catalog_id}` | Get offers for a catalog | None |
-
-## Fetch Strategy
-
-Data is fetched from the external API once on application startup. No automatic scheduling — user triggers re-fetch manually via the frontend "Hent igen" button.
-
-### Trigger
-
-| Trigger | Purpose |
-|---------|---------|
-| Application startup | Load initial data |
-| Manual re-fetch | `POST /api/v1/ingestion/trigger` (frontend button) |
-
-### Delete Strategy
-
-Per-chain delete-all-then-insert:
-1. Delete ALL catalogs for a chain (via JdbcTemplate, bypasses Hibernate)
-2. Fetch latest catalogs from API
-3. Create catalogs + insert offers only for non-empty results
-4. ON DELETE CASCADE handles offer cleanup
-
-### Parallelism
-
-All chains are fetched in parallel using virtual threads. Each chain gets its own virtual thread via `Executors.newVirtualThreadPerTaskExecutor()`. A semaphore limits concurrent API calls to avoid overwhelming the external API (which enforces HTTP/2 stream limits). The concurrency level is configurable via `ingestion.fetch-concurrency` (default:10). HikariCP connection pool is sized to match (default:15).
-
-### Resilience
-
-- **HTTP timeouts**: Connect 5s, Read 15s — no chain hangs forever
-- **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
 
 ## Observability
 
