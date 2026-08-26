@@ -251,10 +251,14 @@ export function SearchPage() {
           <div className="mb-4 text-sm text-base-content/60">
             {offers.length} tilbud fundet
           </div>
-          <table className="table table-zebra w-full">
+          <table className="table table-zebra w-full [&_td]:py-1 [&_th]:py-1">
             <thead>
               <tr>
+                <th className="w-12">Fravælg</th>
                 <th className="w-20 text-[10px] text-base-content/50 leading-tight">Hover for<br/>større billede</th>
+                <th className={thClass('chain')} onClick={() => toggleSort('chain')}>
+                  Kæde<SortIcon column="chain" />
+                </th>
                 <th>Tilbud</th>
                 <th className={thClass('price')} onClick={() => toggleSort('price')}>
                   Pris<SortIcon column="price" />
@@ -266,9 +270,6 @@ export function SearchPage() {
                 <th className={thClass('runTill')} onClick={() => toggleSort('runTill')}>
                   Gyldig til<SortIcon column="runTill" />
                 </th>
-                <th className={thClass('chain')} onClick={() => toggleSort('chain')}>
-                  Kæde<SortIcon column="chain" />
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -277,6 +278,19 @@ export function SearchPage() {
                 const zoom = getZoomUrl(offer.images);
                 return (
                   <tr key={offer.id}>
+                    <td className="text-center">
+                      <button
+                        className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none"
+                        title={`Skjul ${offer.chain.name}`}
+                        onClick={() => {
+                          setExcludedChains((prev) => {
+                            const next = new Set(prev);
+                            next.add(offer.chain.dealerId);
+                            return next;
+                          });
+                        }}
+                      >−</button>
+                    </td>
                     <td>
                       {thumb ? (
                         <img
@@ -293,6 +307,7 @@ export function SearchPage() {
                         </div>
                       )}
                     </td>
+                    <td className="text-sm">{offer.chain.name}</td>
                     <td>
                       <div className="font-medium">{offer.heading}</div>
                     </td>
@@ -311,7 +326,6 @@ export function SearchPage() {
                     <td className="text-sm whitespace-nowrap">
                       {formatDate(offer.runTill)}
                     </td>
-                    <td className="text-sm">{offer.chain.name}</td>
                   </tr>
                 );
               })}

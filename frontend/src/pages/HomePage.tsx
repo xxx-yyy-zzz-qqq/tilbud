@@ -177,10 +177,10 @@ export function HomePage() {
           Ingen kæder fundet
         </div>
       ) : (
-        <table className="table table-zebra w-full [&_td]:py-0.5 [&_th]:py-0.5">
+        <table className="table table-zebra w-full [&_td]:py-1 [&_th]:py-1">
           <thead>
             <tr>
-              <th className="w-8">Fravælg</th>
+              <th className="w-12">Fravælg</th>
               <th className="w-16"></th>
               <th>Navn</th>
               <th>Tilbudsperiode</th>
@@ -193,7 +193,7 @@ export function HomePage() {
               <tr key={chain.dealerId} className="leading-none overflow-visible">
                 <td className="text-center">
                   <button
-                    className="btn btn-ghost btn-xs text-base-content/50 hover:text-error cursor-pointer"
+                    className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none"
                     title={`Skjul ${chain.name}`}
                     onClick={() => {
                       setExcludedChains((prev) => {
