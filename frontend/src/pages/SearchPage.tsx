@@ -189,7 +189,13 @@ export function SearchPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex items-center gap-4 mb-6">
-        <button className="btn btn-outline btn-sm" onClick={() => navigate('/')}>
+        <button className="btn btn-outline btn-sm" onClick={() => {
+          const params = new URLSearchParams();
+          if (filterDate) params.set('date', filterDate);
+          if (excludedChains.size > 0) params.set('exclude', [...excludedChains].join(','));
+          const qs = params.toString();
+          navigate(qs ? `/?${qs}` : '/');
+        }}>
           Hjem
         </button>
         <div className="flex-1">
@@ -254,8 +260,7 @@ export function SearchPage() {
           <table className="table table-zebra w-full [&_td]:py-1 [&_th]:py-1">
             <thead>
               <tr>
-                <th className="w-12">Fravælg</th>
-                <th className="w-20 text-[10px] text-base-content/50 leading-tight">Hover for<br/>større billede</th>
+                <th className="w-20 text-[10px] text-base-content/50 leading-tight">Fravælg /<br/>større billede</th>
                 <th className={thClass('chain')} onClick={() => toggleSort('chain')}>
                   Kæde<SortIcon column="chain" />
                 </th>
@@ -278,34 +283,34 @@ export function SearchPage() {
                 const zoom = getZoomUrl(offer.images);
                 return (
                   <tr key={offer.id}>
-                    <td className="text-center">
-                      <button
-                        className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none"
-                        title={`Skjul ${offer.chain.name}`}
-                        onClick={() => {
-                          setExcludedChains((prev) => {
-                            const next = new Set(prev);
-                            next.add(offer.chain.dealerId);
-                            return next;
-                          });
-                        }}
-                      >−</button>
-                    </td>
-                    <td>
-                      {thumb ? (
-                        <img
-                          src={thumb}
-                          alt={offer.heading}
-                          className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onMouseEnter={(e) => zoom && setHoverImage({ src: zoom, alt: offer.heading, rect: e.currentTarget.getBoundingClientRect() })}
-                          onMouseLeave={() => setHoverImage(null)}
-                          onClick={() => zoom && setZoomImage({ src: zoom, alt: offer.heading })}
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-base-200 rounded flex items-center justify-center text-xs">
-                          —
-                        </div>
-                      )}
+                    <td className="relative">
+                      <div className="flex items-center gap-1">
+                        <button
+                          className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none shrink-0"
+                          title={`Skjul ${offer.chain.name}`}
+                          onClick={() => {
+                            setExcludedChains((prev) => {
+                              const next = new Set(prev);
+                              next.add(offer.chain.dealerId);
+                              return next;
+                            });
+                          }}
+                        >−</button>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={offer.heading}
+                            className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                            onMouseEnter={(e) => zoom && setHoverImage({ src: zoom, alt: offer.heading, rect: e.currentTarget.getBoundingClientRect() })}
+                            onMouseLeave={() => setHoverImage(null)}
+                            onClick={() => zoom && setZoomImage({ src: zoom, alt: offer.heading })}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-base-200 rounded flex items-center justify-center text-xs">
+                            —
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="text-sm">{offer.chain.name}</td>
                     <td>
