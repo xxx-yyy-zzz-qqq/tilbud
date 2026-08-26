@@ -123,11 +123,7 @@ export function HomePage() {
           </thead>
           <tbody>
             {chains.map((chain) => (
-              <tr
-                key={chain.dealerId}
-                className="hover cursor-pointer"
-                onClick={() => navigate(`/search?chain=${chain.dealerId}`)}
-              >
+              <tr key={chain.dealerId}>
                 <td className="font-medium">{chain.name}</td>
                 <td>
                   {chain.catalog
