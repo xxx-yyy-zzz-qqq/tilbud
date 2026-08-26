@@ -18,6 +18,13 @@ Search engine for Danish grocery store weekly offers (tilbudsaviser).
                     └──────────────┘
 ```
 
+## Frontend
+
+React SPA with Tailwind CSS and DaisyUI. Two main pages:
+
+- **Landing page** (`/`) — chain table with logos, catalog count, offer count. Date filter narrows to chains with offers valid on selected date. Search navigates to results page.
+- **Search page** (`/search?q=...&date=...`) — offer table with image, heading, price, validity, chain. Sortable columns, client-side date filtering, offer deduplication.
+
 ## Data Source
 
 Public API: `api.etilbudsavis.dk/v2`
@@ -57,13 +64,6 @@ All chains are fetched in parallel using virtual threads. Each chain gets its ow
 
 - **HTTP timeouts**: Connect 5s, Read 15s — no chain hangs forever
 - **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
-
-## Frontend
-
-React SPA with Tailwind CSS and DaisyUI. Two main pages:
-
-- **Landing page** (`/`) — chain table with logos, catalog count, offer count. Date filter narrows to chains with offers valid on selected date. Search navigates to results page.
-- **Search page** (`/search?q=...&date=...`) — offer table with image, heading, price, validity, chain. Sortable columns, client-side date filtering, offer deduplication.
 
 ## Search
 
