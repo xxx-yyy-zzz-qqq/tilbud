@@ -264,7 +264,7 @@ cd tilbud
 cp .env.example .env
 
 # Start all services
-./dev.sh
+./run.sh
 ```
 
 This starts:
