@@ -260,7 +260,7 @@ export function SearchPage() {
           <table className="table table-zebra w-full [&_td]:py-1 [&_th]:py-1">
             <thead>
               <tr>
-                <th className="w-12">Fravælg Kæde</th>
+                <th className="w-12 text-[10px] leading-tight">Fravælg<br/>Kæde</th>
                 <th className="w-20 text-[10px] text-base-content/50 leading-tight">Hover for<br/>større billede</th>
                 <th className={thClass('chain')} onClick={() => toggleSort('chain')}>
                   Kæde<SortIcon column="chain" />
