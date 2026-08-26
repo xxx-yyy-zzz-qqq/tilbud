@@ -102,7 +102,6 @@ All chains are fetched in parallel using virtual threads. Each chain gets its ow
 
 - **HTTP timeouts**: Connect 5s, Read 15s — no chain hangs forever
 - **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
-- **Per-catalog error handling**: One failed catalog doesn't kill the whole chain
 
 ## Observability
 
