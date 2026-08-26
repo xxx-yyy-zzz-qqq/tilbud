@@ -117,6 +117,7 @@ export function HomePage() {
         <table className="table table-zebra w-full">
           <thead>
             <tr>
+              <th className="w-12"></th>
               <th>Navn</th>
               <th>Tilbudsperiode</th>
               <th className="text-right">Kataloger</th>
@@ -126,6 +127,22 @@ export function HomePage() {
           <tbody>
             {chains.map((chain) => (
               <tr key={chain.dealerId}>
+                <td>
+                  {chain.logoUrl ? (
+                    <img
+                      src={chain.logoUrl}
+                      alt={chain.name}
+                      className="w-10 h-10 object-contain rounded"
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded flex items-center justify-center text-xs font-bold text-white"
+                      style={{ backgroundColor: `#${chain.color || '999'}` }}
+                    >
+                      {chain.name.charAt(0)}
+                    </div>
+                  )}
+                </td>
                 <td className="font-medium">{chain.name}</td>
                 <td>
                   {chain.catalog
