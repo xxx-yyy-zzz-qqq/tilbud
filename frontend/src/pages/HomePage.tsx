@@ -114,7 +114,7 @@ export function HomePage() {
           Ingen kæder fundet
         </div>
       ) : (
-        <table className="table table-zebra w-full [&_td]:py-1.5 [&_th]:py-1.5">
+        <table className="table table-zebra w-full [&_td]:py-0.5 [&_th]:py-0.5">
           <thead>
             <tr>
               <th className="w-16"></th>
