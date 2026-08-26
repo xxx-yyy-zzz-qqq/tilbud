@@ -25,7 +25,7 @@ public class EtilbudsavisClient {
             .build();
 
         var requestFactory = new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
-        requestFactory.setReadTimeout(Duration.ofSeconds(30));
+        requestFactory.setReadTimeout(Duration.ofSeconds(15));
 
         this.restClient = RestClient.builder()
             .baseUrl(baseUrl)
