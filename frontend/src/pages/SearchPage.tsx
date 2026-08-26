@@ -65,9 +65,10 @@ export function SearchPage() {
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
+  const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') setZoomImage(null);
+    if (e.key === 'Escape') { setZoomImage(null); setHoverImage(null); }
   }, []);
 
   useEffect(() => {
@@ -190,6 +191,8 @@ export function SearchPage() {
                           src={thumb}
                           alt={offer.heading}
                           className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          onMouseEnter={(e) => zoom && setHoverImage({ src: zoom, alt: offer.heading, rect: e.currentTarget.getBoundingClientRect() })}
+                          onMouseLeave={() => setHoverImage(null)}
                           onClick={() => zoom && setZoomImage({ src: zoom, alt: offer.heading })}
                         />
                       ) : (
@@ -240,6 +243,24 @@ export function SearchPage() {
             <button onClick={() => setZoomImage(null)}>luk</button>
           </form>
         </dialog>
+      )}
+
+      {hoverImage && (
+        <div
+          className="fixed z-50 pointer-events-none shadow-xl rounded-lg overflow-hidden bg-base-100 border border-base-300"
+          style={{
+            top: hoverImage.rect.top,
+            left: hoverImage.rect.right + 12 > window.innerWidth - 320
+              ? hoverImage.rect.left - 320 - 12
+              : hoverImage.rect.right + 12,
+          }}
+        >
+          <img
+            src={hoverImage.src}
+            alt={hoverImage.alt}
+            className="w-72 h-72 object-contain"
+          />
+        </div>
       )}
     </div>
   );
