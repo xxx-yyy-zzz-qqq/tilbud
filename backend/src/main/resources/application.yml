@@ -50,13 +50,6 @@ management:
         enabled: true
 
 resilience4j:
-  circuitbreaker:
-    instances:
-      etilbudsavis:
-        slidingWindowSize: 30
-        failureRateThreshold: 50
-        waitDurationInOpenState: 60s
-        permittedNumberOfCallsInHalfOpenState: 1
   retry:
     instances:
       etilbudsavis:

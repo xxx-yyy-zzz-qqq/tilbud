@@ -1,6 +1,5 @@
 package tilbud.service;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -192,7 +191,6 @@ public class OfferIngestionService {
         log.info("Dealer discovery: {} created, {} updated, {} total", created, updated, dealers.size());
     }
 
-    @CircuitBreaker(name = "etilbudsavis", fallbackMethod = "fetchChainFallback")
     @Retry(name = "etilbudsavis")
     @Timed(value = "etilbudsavis_chain_fetch_duration", description = "Time to fetch one chain")
     public void fetchChain(Chain chain) {
@@ -211,13 +209,6 @@ public class OfferIngestionService {
         for (CatalogDto catalogDto : weeklyCatalogs) {
             fetchCatalogOffers(chain, catalogDto);
         }
-    }
-
-    public void fetchChainFallback(Chain chain, Exception e) {
-        log.warn("Circuit breaker fallback for chain {}: {} [{}]",
-            chain.getDealerId(), e.getMessage(), e.getClass().getSimpleName());
-        meterRegistry.counter("etilbudsavis_fetch_errors_total",
-            "chain", chain.getDealerId()).increment();
     }
 
     private void fetchCatalogOffers(Chain chain, CatalogDto catalogDto) {

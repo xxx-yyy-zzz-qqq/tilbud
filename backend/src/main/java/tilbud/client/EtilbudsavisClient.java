@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +20,16 @@ public class EtilbudsavisClient {
     private final RestClient restClient;
 
     public EtilbudsavisClient(@Value("${api.base-url}") String baseUrl) {
+        var httpClient = java.net.http.HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+
+        var requestFactory = new org.springframework.http.client.JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(Duration.ofSeconds(30));
+
         this.restClient = RestClient.builder()
             .baseUrl(baseUrl)
+            .requestFactory(requestFactory)
             .build();
     }
 
