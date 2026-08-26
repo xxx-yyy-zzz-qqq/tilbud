@@ -207,9 +207,6 @@ Actuator exposes `/actuator/health` with database connectivity status.
 git clone https://github.com/xxx-yyy-zzz-qqq/tilbud.git
 cd tilbud
 
-# Copy environment variables
-cp .env.example .env
-
 # Start all services
 ./run.sh
 ```
@@ -219,7 +216,7 @@ This starts:
 - **Spring Boot backend** on `localhost:8080`
 - **React frontend** on `localhost:5173`
 
-`.env.example` is committed with default values. Your local `.env` (created by `cp .env.example .env`) is gitignored — edit it to override defaults (e.g., different ports or credentials).
+`.env.example` is committed with default values. `run.sh` copies it to `.env` automatically on first run. Your local `.env` is gitignored — edit it to override defaults (e.g., different ports or credentials).
 
 ### Development Commands
 
