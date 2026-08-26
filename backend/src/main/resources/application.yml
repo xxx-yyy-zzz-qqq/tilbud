@@ -33,6 +33,9 @@ server:
 api:
   base-url: ${API_BASE_URL:https://api.etilbudsavis.dk/v2}
 
+ingestion:
+  fetch-concurrency: ${INGESTION_FETCH_CONCURRENCY:10}
+
 management:
   endpoints:
     web:

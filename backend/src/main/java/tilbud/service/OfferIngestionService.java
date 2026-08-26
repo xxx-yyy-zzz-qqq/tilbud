@@ -51,6 +51,7 @@ public class OfferIngestionService {
     private final OfferRepository offerRepository;
     private final MeterRegistry meterRegistry;
     private final JdbcTemplate jdbc;
+    private final int fetchConcurrency;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicInteger lastChainsProcessed = new AtomicInteger(0);
@@ -65,13 +66,15 @@ public class OfferIngestionService {
             CatalogRepository catalogRepository,
             OfferRepository offerRepository,
             MeterRegistry meterRegistry,
-            JdbcTemplate jdbc) {
+            JdbcTemplate jdbc,
+            @org.springframework.beans.factory.annotation.Value("${ingestion.fetch-concurrency:10}") int fetchConcurrency) {
         this.client = client;
         this.chainRepository = chainRepository;
         this.catalogRepository = catalogRepository;
         this.offerRepository = offerRepository;
         this.meterRegistry = meterRegistry;
         this.jdbc = jdbc;
+        this.fetchConcurrency = fetchConcurrency;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -104,7 +107,8 @@ public class OfferIngestionService {
 
             Timer.Sample sample = Timer.start(meterRegistry);
 
-            var semaphore = new Semaphore(10);
+            var semaphore = new Semaphore(fetchConcurrency);
+            log.info("Fetching {} chains with concurrency {}", chains.size(), fetchConcurrency);
             try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
                 List<CompletableFuture<Void>> futures = chains.stream()
                     .map(chain -> CompletableFuture.runAsync(() -> {
