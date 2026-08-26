@@ -17,11 +17,11 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('da-DK', opts);
 }
 
-function getThumbUrl(images: string | null): string | null {
+function getImageUrl(images: string | null): string | null {
   if (!images) return null;
   try {
     const parsed = JSON.parse(images);
-    return parsed.thumb || null;
+    return parsed.view || parsed.thumb || null;
   } catch {
     return null;
   }
@@ -160,7 +160,7 @@ export function SearchPage() {
             </thead>
             <tbody>
               {sortedOffers.map((offer) => {
-                const thumb = getThumbUrl(offer.images);
+                const thumb = getImageUrl(offer.images);
                 return (
                   <tr key={offer.id}>
                     <td>
