@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchAllOffers } from '../api';
 import { SearchBar } from '../components/SearchBar';
 import type { OfferResponse } from '../types';
+
+type SortKey = 'price' | 'runFrom' | 'runTill' | 'chain';
+type SortDir = 'asc' | 'desc';
 
 function formatPrice(kr: number): string {
   return `${kr.toFixed(2)} kr`.replace('.', ',');
@@ -34,6 +37,12 @@ function dedupOffers(offers: OfferResponse[]): OfferResponse[] {
   });
 }
 
+function compareValues(a: number | string, b: number | string, dir: SortDir): number {
+  const mul = dir === 'asc' ? 1 : -1;
+  if (typeof a === 'number' && typeof b === 'number') return (a - b) * mul;
+  return String(a).localeCompare(String(b), 'da') * mul;
+}
+
 export function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -43,6 +52,36 @@ export function SearchPage() {
   const [offers, setOffers] = useState<OfferResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('price');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const sortedOffers = useMemo(() => {
+    const copy = [...offers];
+    copy.sort((a, b) => {
+      switch (sortKey) {
+        case 'price': return compareValues(a.price, b.price, sortDir);
+        case 'runFrom': return compareValues(a.runFrom, b.runFrom, sortDir);
+        case 'runTill': return compareValues(a.runTill, b.runTill, sortDir);
+        case 'chain': return compareValues(a.chain.name, b.chain.name, sortDir);
+        default: return 0;
+      }
+    });
+    return copy;
+  }, [offers, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const sortIndicator = (key: SortKey) => {
+    if (sortKey !== key) return '';
+    return sortDir === 'asc' ? ' ▲' : ' ▼';
+  };
 
   const doSearch = async (q: string) => {
     setQuery(q);
@@ -102,14 +141,22 @@ export function SearchPage() {
               <tr>
                 <th className="w-16"></th>
                 <th>Tilbud</th>
-                <th>Pris</th>
-                <th>Gyldig fra</th>
-                <th>Gyldig til</th>
-                <th>Kæde</th>
+                <th className="cursor-pointer select-none" onClick={() => toggleSort('price')}>
+                  Pris{sortIndicator('price')}
+                </th>
+                <th className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('runFrom')}>
+                  Gyldig fra{sortIndicator('runFrom')}
+                </th>
+                <th className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('runTill')}>
+                  Gyldig til{sortIndicator('runTill')}
+                </th>
+                <th className="cursor-pointer select-none" onClick={() => toggleSort('chain')}>
+                  Kæde{sortIndicator('chain')}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {offers.map((offer) => {
+              {sortedOffers.map((offer) => {
                 const thumb = getThumbUrl(offer.images);
                 return (
                   <tr key={offer.id}>
