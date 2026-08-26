@@ -45,6 +45,9 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
             Sidste hentning: {runTime} — {r.chainsProcessed} kæder gennemgået{chainsWithOffers != null ? `, ${chainsWithOffers} med tilbud` : ''}, {r.catalogsProcessed} kataloger, {r.offersInserted.toLocaleString('da-DK')} tilbud
             {r.errors > 0 && <span className="text-error">, {r.errors} fejl</span>}
           </div>
+          <div className="text-xs opacity-70 mt-1">
+            Kæder med mange kataloger er lokale butikker med egne kataloger og lokale priser.
+          </div>
         </div>
       </div>
     );
