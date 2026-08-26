@@ -52,7 +52,7 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
             Kæder med mange kataloger dækker sandsynligvis over lokale butikkers egne kataloger med lokale priser.
           </div>
           <div className="text-xs opacity-70">
-            Henter seneste tilgængelige katalog; tilbudsperiode kan derfor variere.
+            Henter seneste tilgængelige katalog; tilbudsperioden vil derfor ofte variere på tværs af kæderne.
           </div>
         </div>
       </div>
