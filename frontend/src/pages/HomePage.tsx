@@ -114,7 +114,7 @@ export function HomePage() {
           Ingen kæder fundet
         </div>
       ) : (
-        <table className="table table-zebra w-full">
+        <table className="table table-zebra w-full [&_td]:py-1.5 [&_th]:py-1.5">
           <thead>
             <tr>
               <th className="w-16"></th>
@@ -126,7 +126,7 @@ export function HomePage() {
           </thead>
           <tbody>
             {chains.map((chain) => (
-              <tr key={chain.dealerId}>
+              <tr key={chain.dealerId} className="leading-none">
                 <td>
                   {chain.logoUrl ? (
                     <img
