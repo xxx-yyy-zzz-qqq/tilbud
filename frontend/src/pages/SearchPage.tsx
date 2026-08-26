@@ -25,6 +25,16 @@ function getThumbUrl(images: string | null): string | null {
   }
 }
 
+function dedupOffers(offers: OfferResponse[]): OfferResponse[] {
+  const seen = new Set<string>();
+  return offers.filter((o) => {
+    const key = `${o.heading}|${o.price}|${o.runFrom}|${o.runTill}|${o.chain.dealerId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -41,7 +51,7 @@ export function SearchPage() {
     setSearched(true);
     try {
       const results = await fetchAllOffers(q);
-      setOffers(results);
+      setOffers(dedupOffers(results));
     } catch (err) {
       console.error('Search failed:', err);
       setOffers([]);
