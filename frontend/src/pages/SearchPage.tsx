@@ -4,8 +4,8 @@ import { fetchAllOffers } from '../api';
 import { SearchBar } from '../components/SearchBar';
 import type { OfferResponse } from '../types';
 
-function formatPrice(ore: number): string {
-  return `${(ore / 100).toFixed(2)} kr`.replace('.', ',');
+function formatPrice(kr: number): string {
+  return `${kr.toFixed(2)} kr`.replace('.', ',');
 }
 
 function formatPeriod(from: string, till: string): string {
