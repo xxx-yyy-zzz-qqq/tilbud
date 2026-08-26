@@ -28,7 +28,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoUnit;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 public class OfferIngestionService {
 
     private static final Logger log = LoggerFactory.getLogger(OfferIngestionService.class);
-    private static final long MAX_CATALOG_DURATION_DAYS = 14;
     private static final DateTimeFormatter API_DATE_FORMAT = new DateTimeFormatterBuilder()
         .append(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
@@ -261,11 +260,7 @@ public class OfferIngestionService {
     }
 
     private boolean isWeeklyCatalog(CatalogDto catalog) {
-        if (catalog.runFrom() == null || catalog.runTill() == null) return false;
-        Instant runFrom = parseInstant(catalog.runFrom());
-        Instant runTill = parseInstant(catalog.runTill());
-        long days = ChronoUnit.DAYS.between(runFrom, runTill);
-        return days <= MAX_CATALOG_DURATION_DAYS;
+        return catalog.runFrom() != null && catalog.runTill() != null;
     }
 
     private Offer mapToOffer(OfferDto dto, Chain chain, Catalog catalog) {
