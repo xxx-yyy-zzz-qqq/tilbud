@@ -23,6 +23,11 @@ export function HomePage() {
   const [chains, setChains] = useState<ChainWithCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterDate, setFilterDate] = useState<string>('');
+  const [excludedChains, setExcludedChains] = useState<Set<string>>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const exclude = params.get('exclude');
+    return exclude ? new Set(exclude.split(',')) : new Set();
+  });
 
   const loadChains = useCallback(async () => {
     setLoading(true);
@@ -74,6 +79,7 @@ export function HomePage() {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (filterDate) params.set('date', filterDate);
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains].join(','));
     navigate(`/search?${params.toString()}`);
   };
 
@@ -95,15 +101,18 @@ export function HomePage() {
   };
 
   const filteredChains = useMemo(() => {
-    if (!filterDate) return chains;
-    const d = new Date(filterDate);
-    return chains.filter((chain) => {
-      if (!chain.catalog) return false;
-      const from = new Date(chain.catalog.runFrom);
-      const till = new Date(chain.catalog.runTill);
-      return from <= d && d <= till;
-    });
-  }, [chains, filterDate]);
+    let result = chains;
+    if (filterDate) {
+      const d = new Date(filterDate);
+      result = result.filter((chain) => {
+        if (!chain.catalog) return false;
+        const from = new Date(chain.catalog.runFrom);
+        const till = new Date(chain.catalog.runTill);
+        return from <= d && d <= till;
+      });
+    }
+    return result.filter((chain) => !excludedChains.has(chain.dealerId));
+  }, [chains, filterDate, excludedChains]);
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -135,6 +144,30 @@ export function HomePage() {
         </div>
       </div>
 
+      {excludedChains.size > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[...excludedChains].map((dealerId) => {
+            const chain = chains.find((c) => c.dealerId === dealerId);
+            if (!chain) return null;
+            return (
+              <span key={dealerId} className="badge badge-outline gap-1">
+                {chain.name}
+                <button
+                  className="text-xs cursor-pointer"
+                  onClick={() => {
+                    setExcludedChains((prev) => {
+                      const next = new Set(prev);
+                      next.delete(dealerId);
+                      return next;
+                    });
+                  }}
+                >×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12">
           <span className="loading loading-spinner loading-lg"></span>
@@ -147,6 +180,7 @@ export function HomePage() {
         <table className="table table-zebra w-full [&_td]:py-0.5 [&_th]:py-0.5">
           <thead>
             <tr>
+              <th className="w-8">Fravælg</th>
               <th className="w-16"></th>
               <th>Navn</th>
               <th>Tilbudsperiode</th>
@@ -157,6 +191,19 @@ export function HomePage() {
           <tbody>
             {filteredChains.map((chain) => (
               <tr key={chain.dealerId} className="leading-none overflow-visible">
+                <td className="text-center">
+                  <button
+                    className="btn btn-ghost btn-xs text-base-content/50 hover:text-error cursor-pointer"
+                    title={`Skjul ${chain.name}`}
+                    onClick={() => {
+                      setExcludedChains((prev) => {
+                        const next = new Set(prev);
+                        next.add(chain.dealerId);
+                        return next;
+                      });
+                    }}
+                  >−</button>
+                </td>
                 <td className="relative overflow-visible">
                   {chain.logoUrl ? (
                     <img

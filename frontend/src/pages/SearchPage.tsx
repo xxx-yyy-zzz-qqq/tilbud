@@ -86,6 +86,7 @@ export function SearchPage() {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialDate = searchParams.get('date') || '';
+  const initialExclude = searchParams.get('exclude');
 
   const [query, setQuery] = useState(initialQuery);
   const [offers, setOffers] = useState<OfferResponse[]>([]);
@@ -94,6 +95,9 @@ export function SearchPage() {
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [filterDate, setFilterDate] = useState<string>(initialDate);
+  const [excludedChains, setExcludedChains] = useState<Set<string>>(
+    initialExclude ? new Set(initialExclude.split(',')) : new Set()
+  );
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
 
@@ -116,6 +120,9 @@ export function SearchPage() {
         return from <= d && d <= till;
       });
     }
+    if (excludedChains.size > 0) {
+      filtered = filtered.filter((o) => !excludedChains.has(o.chain.dealerId));
+    }
     filtered.sort((a, b) => {
       switch (sortKey) {
         case 'price': return compareValues(a.price, b.price, sortDir);
@@ -126,7 +133,7 @@ export function SearchPage() {
       }
     });
     return filtered;
-  }, [offers, sortKey, sortDir, filterDate]);
+  }, [offers, sortKey, sortDir, filterDate, excludedChains]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -171,7 +178,11 @@ export function SearchPage() {
   }, []);
 
   const handleSearch = (q: string) => {
-    navigate(`/search?q=${encodeURIComponent(q)}`, { replace: true });
+    const params = new URLSearchParams();
+    params.set('q', q);
+    if (filterDate) params.set('date', filterDate);
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains].join(','));
+    navigate(`/search?${params.toString()}`, { replace: true });
     doSearch(q);
   };
 
@@ -198,6 +209,30 @@ export function SearchPage() {
           )}
         </div>
       </div>
+
+      {excludedChains.size > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {[...excludedChains].map((dealerId) => {
+            const offer = offers.find((o) => o.chain.dealerId === dealerId);
+            const name = offer?.chain.name || dealerId;
+            return (
+              <span key={dealerId} className="badge badge-outline gap-1">
+                {name}
+                <button
+                  className="text-xs cursor-pointer"
+                  onClick={() => {
+                    setExcludedChains((prev) => {
+                      const next = new Set(prev);
+                      next.delete(dealerId);
+                      return next;
+                    });
+                  }}
+                >×</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
