@@ -51,6 +51,9 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
           <div className="text-xs opacity-70 mt-1">
             Kæder med mange kataloger dækker sandsynligvis over lokale butikkers egne kataloger med lokale priser.
           </div>
+          <div className="text-xs opacity-70">
+            Henter seneste tilgængelige katalog; tilbudsperiode kan derfor variere.
+          </div>
         </div>
       </div>
     );
