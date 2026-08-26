@@ -5,7 +5,6 @@ import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -27,8 +26,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -50,7 +50,6 @@ public class OfferIngestionService {
     private final OfferRepository offerRepository;
     private final MeterRegistry meterRegistry;
     private final JdbcTemplate jdbc;
-    private final EntityManager entityManager;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicInteger lastChainsProcessed = new AtomicInteger(0);
@@ -65,15 +64,13 @@ public class OfferIngestionService {
             CatalogRepository catalogRepository,
             OfferRepository offerRepository,
             MeterRegistry meterRegistry,
-            JdbcTemplate jdbc,
-            EntityManager entityManager) {
+            JdbcTemplate jdbc) {
         this.client = client;
         this.chainRepository = chainRepository;
         this.catalogRepository = catalogRepository;
         this.offerRepository = offerRepository;
         this.meterRegistry = meterRegistry;
         this.jdbc = jdbc;
-        this.entityManager = entityManager;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -106,17 +103,23 @@ public class OfferIngestionService {
 
             Timer.Sample sample = Timer.start(meterRegistry);
 
-            chains.forEach(chain -> {
-                try {
-                    fetchChain(chain);
-                    lastChainsProcessed.incrementAndGet();
-                } catch (Exception e) {
-                    log.error("Error fetching chain {}: {}", chain.getDealerId(), e.getMessage());
-                    lastErrors.incrementAndGet();
-                    meterRegistry.counter("etilbudsavis_fetch_errors_total",
-                        "chain", chain.getDealerId()).increment();
-                }
-            });
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                List<CompletableFuture<Void>> futures = chains.stream()
+                    .map(chain -> CompletableFuture.runAsync(() -> {
+                        try {
+                            fetchChain(chain);
+                            lastChainsProcessed.incrementAndGet();
+                        } catch (Exception e) {
+                            log.error("Error fetching chain {}: {}", chain.getDealerId(), e.getMessage(), e);
+                            lastErrors.incrementAndGet();
+                            meterRegistry.counter("etilbudsavis_fetch_errors_total",
+                                "chain", chain.getDealerId()).increment();
+                        }
+                    }, executor))
+                    .toList();
+
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            }
 
             sample.stop(Timer.builder("etilbudsavis_fetch_duration_seconds")
                 .description("Time to fetch all chains")
@@ -187,7 +190,6 @@ public class OfferIngestionService {
         log.debug("Fetching catalogs for chain {} ({})", chain.getName(), chain.getDealerId());
 
         jdbc.update("DELETE FROM catalogs WHERE chain_id = ?", chain.getId());
-        entityManager.clear();
 
         List<CatalogDto> catalogs = client.getCatalogs(chain.getDealerId());
         List<CatalogDto> weeklyCatalogs = catalogs.stream()
@@ -203,7 +205,8 @@ public class OfferIngestionService {
     }
 
     public void fetchChainFallback(Chain chain, Exception e) {
-        log.warn("Circuit breaker fallback for chain {}: {}", chain.getDealerId(), e.getMessage());
+        log.warn("Circuit breaker fallback for chain {}: {} [{}]",
+            chain.getDealerId(), e.getMessage(), e.getClass().getSimpleName());
         meterRegistry.counter("etilbudsavis_fetch_errors_total",
             "chain", chain.getDealerId()).increment();
     }

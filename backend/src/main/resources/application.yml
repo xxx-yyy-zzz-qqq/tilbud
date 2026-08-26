@@ -7,6 +7,8 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:tilbud}
     password: ${SPRING_DATASOURCE_PASSWORD:tilbud}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
 
   jpa:
     hibernate:
@@ -48,7 +50,7 @@ resilience4j:
   circuitbreaker:
     instances:
       etilbudsavis:
-        slidingWindowSize: 10
+        slidingWindowSize: 30
         failureRateThreshold: 50
         waitDurationInOpenState: 60s
         permittedNumberOfCallsInHalfOpenState: 1
