@@ -102,7 +102,6 @@ public class OfferIngestionService {
             discoverDealers();
 
             List<Chain> chains = chainRepository.findAll();
-            log.info("Fetching {} chains", chains.size());
 
             Timer.Sample sample = Timer.start(meterRegistry);
 
