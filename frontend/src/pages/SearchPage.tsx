@@ -157,7 +157,7 @@ export function SearchPage() {
           <SearchBar onSearch={handleSearch} initialValue={initialQuery} />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm whitespace-nowrap" htmlFor="filter-date">Dato:</label>
+          <label className="text-sm whitespace-nowrap" htmlFor="filter-date">Dato (valgfri):</label>
           <input
             id="filter-date"
             type="date"
