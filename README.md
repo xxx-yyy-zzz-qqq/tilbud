@@ -219,6 +219,8 @@ This starts:
 - **Spring Boot backend** on `localhost:8080`
 - **React frontend** on `localhost:5173`
 
+`.env.example` is committed with default values. Your local `.env` (created by `cp .env.example .env`) is gitignored — edit it to override defaults (e.g., different ports or credentials).
+
 ### Development Commands
 
 ```bash
