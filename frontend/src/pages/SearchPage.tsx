@@ -163,7 +163,7 @@ export function SearchPage() {
           <table className="table table-zebra w-full">
             <thead>
               <tr>
-                <th className="w-16 text-xs text-base-content/50" title="Hover for større billede">Hover for billede</th>
+                <th className="w-20 text-[10px] text-base-content/50 leading-tight">Hover for<br/>større billede</th>
                 <th>Tilbud</th>
                 <th className={thClass('price')} onClick={() => toggleSort('price')}>
                   Pris<SortIcon column="price" />
