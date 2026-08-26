@@ -78,10 +78,13 @@ export function SearchPage() {
     }
   };
 
-  const sortIndicator = (key: SortKey) => {
-    if (sortKey !== key) return '';
-    return sortDir === 'asc' ? ' ▲' : ' ▼';
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sortKey !== column) return <span className="opacity-30 ml-1 text-xs">↕</span>;
+    return <span className="ml-1 text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>;
   };
+
+  const thClass = (key: SortKey) =>
+    `cursor-pointer select-none whitespace-nowrap ${sortKey === key ? 'text-primary font-bold' : ''}`;
 
   const doSearch = async (q: string) => {
     setQuery(q);
@@ -141,17 +144,17 @@ export function SearchPage() {
               <tr>
                 <th className="w-16"></th>
                 <th>Tilbud</th>
-                <th className="cursor-pointer select-none" onClick={() => toggleSort('price')}>
-                  Pris{sortIndicator('price')}
+                <th className={thClass('price')} onClick={() => toggleSort('price')}>
+                  Pris<SortIcon column="price" />
                 </th>
-                <th className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('runFrom')}>
-                  Gyldig fra{sortIndicator('runFrom')}
+                <th className={thClass('runFrom')} onClick={() => toggleSort('runFrom')}>
+                  Gyldig fra<SortIcon column="runFrom" />
                 </th>
-                <th className="cursor-pointer select-none whitespace-nowrap" onClick={() => toggleSort('runTill')}>
-                  Gyldig til{sortIndicator('runTill')}
+                <th className={thClass('runTill')} onClick={() => toggleSort('runTill')}>
+                  Gyldig til<SortIcon column="runTill" />
                 </th>
-                <th className="cursor-pointer select-none" onClick={() => toggleSort('chain')}>
-                  Kæde{sortIndicator('chain')}
+                <th className={thClass('chain')} onClick={() => toggleSort('chain')}>
+                  Kæde<SortIcon column="chain" />
                 </th>
               </tr>
             </thead>
