@@ -3,13 +3,14 @@ package tilbud.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import tilbud.client.CatalogDto;
@@ -23,16 +24,12 @@ import tilbud.repository.CatalogRepository;
 import tilbud.repository.ChainRepository;
 import tilbud.repository.OfferRepository;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -54,6 +51,8 @@ public class OfferIngestionService {
     private final CatalogRepository catalogRepository;
     private final OfferRepository offerRepository;
     private final MeterRegistry meterRegistry;
+    private final JdbcTemplate jdbc;
+    private final EntityManager entityManager;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicInteger lastChainsProcessed = new AtomicInteger(0);
@@ -67,12 +66,16 @@ public class OfferIngestionService {
             ChainRepository chainRepository,
             CatalogRepository catalogRepository,
             OfferRepository offerRepository,
-            MeterRegistry meterRegistry) {
+            MeterRegistry meterRegistry,
+            JdbcTemplate jdbc,
+            EntityManager entityManager) {
         this.client = client;
         this.chainRepository = chainRepository;
         this.catalogRepository = catalogRepository;
         this.offerRepository = offerRepository;
         this.meterRegistry = meterRegistry;
+        this.jdbc = jdbc;
+        this.entityManager = entityManager;
     }
 
     @Scheduled(cron = "0 0 5,17 * * *")
@@ -190,6 +193,9 @@ public class OfferIngestionService {
     public void fetchChain(Chain chain) {
         log.debug("Fetching catalogs for chain {} ({})", chain.getName(), chain.getDealerId());
 
+        jdbc.update("DELETE FROM catalogs WHERE chain_id = ?", chain.getId());
+        entityManager.clear();
+
         List<CatalogDto> catalogs = client.getCatalogs(chain.getDealerId());
         List<CatalogDto> weeklyCatalogs = catalogs.stream()
             .filter(this::isWeeklyCatalog)
@@ -198,17 +204,8 @@ public class OfferIngestionService {
         log.debug("Chain {} has {} catalogs, {} weekly",
             chain.getDealerId(), catalogs.size(), weeklyCatalogs.size());
 
-        Set<String> seenCatalogIds = new HashSet<>();
-
         for (CatalogDto catalogDto : weeklyCatalogs) {
-            fetchCatalogOffers(chain, catalogDto, seenCatalogIds);
-        }
-
-        List<Catalog> stale = catalogRepository.findByChain(chain).stream()
-            .filter(c -> !seenCatalogIds.contains(c.getCatalogId()))
-            .toList();
-        if (!stale.isEmpty()) {
-            catalogRepository.deleteAll(stale);
+            fetchCatalogOffers(chain, catalogDto);
         }
     }
 
@@ -218,7 +215,7 @@ public class OfferIngestionService {
             "chain", chain.getDealerId()).increment();
     }
 
-    private void fetchCatalogOffers(Chain chain, CatalogDto catalogDto, Set<String> seenCatalogIds) {
+    private void fetchCatalogOffers(Chain chain, CatalogDto catalogDto) {
         List<OfferDto> offers = client.getOffers(catalogDto.id());
 
         if (offers.isEmpty()) {
@@ -226,10 +223,8 @@ public class OfferIngestionService {
             return;
         }
 
-        seenCatalogIds.add(catalogDto.id());
-        Catalog catalog = findOrCreateCatalog(chain, catalogDto);
+        Catalog catalog = createCatalog(chain, catalogDto);
 
-        // Deduplicate by offer ID
         List<OfferDto> uniqueOffers = offers.stream()
             .collect(Collectors.toMap(
                 OfferDto::id,
@@ -240,10 +235,6 @@ public class OfferIngestionService {
             .stream()
             .toList();
 
-        // Delete old offers for this catalog
-        offerRepository.deleteByCatalog(catalog);
-
-        // Insert new offers
         for (OfferDto offerDto : uniqueOffers) {
             Offer offer = mapToOffer(offerDto, chain, catalog);
             offerRepository.save(offer);
@@ -260,16 +251,13 @@ public class OfferIngestionService {
         log.debug("Catalog {}: inserted {} offers", catalogDto.id(), uniqueOffers.size());
     }
 
-    private Catalog findOrCreateCatalog(Chain chain, CatalogDto dto) {
-        return catalogRepository.findByCatalogId(dto.id())
-            .orElseGet(() -> {
-                Catalog catalog = new Catalog(dto.id(), chain, dto.label());
-                catalog.setRunFrom(parseInstant(dto.runFrom()));
-                catalog.setRunTill(parseInstant(dto.runTill()));
-                catalog.setOfferCount(dto.offerCount());
-                catalog.setCategoryIds(dto.categoryIds() != null ? new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(dto.categoryIds()).toString() : null);
-                return catalogRepository.save(catalog);
-            });
+    private Catalog createCatalog(Chain chain, CatalogDto dto) {
+        Catalog catalog = new Catalog(dto.id(), chain, dto.label());
+        catalog.setRunFrom(parseInstant(dto.runFrom()));
+        catalog.setRunTill(parseInstant(dto.runTill()));
+        catalog.setOfferCount(dto.offerCount());
+        catalog.setCategoryIds(dto.categoryIds() != null ? new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(dto.categoryIds()).toString() : null);
+        return catalogRepository.save(catalog);
     }
 
     private boolean isWeeklyCatalog(CatalogDto catalog) {
