@@ -64,6 +64,7 @@ export function SearchPage() {
   const [searched, setSearched] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [filterDate, setFilterDate] = useState<string>('');
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
 
@@ -77,8 +78,16 @@ export function SearchPage() {
   }, [handleKeyDown]);
 
   const sortedOffers = useMemo(() => {
-    const copy = [...offers];
-    copy.sort((a, b) => {
+    let filtered = [...offers];
+    if (filterDate) {
+      const d = new Date(filterDate);
+      filtered = filtered.filter((o) => {
+        const from = new Date(o.runFrom);
+        const till = new Date(o.runTill);
+        return from <= d && d <= till;
+      });
+    }
+    filtered.sort((a, b) => {
       switch (sortKey) {
         case 'price': return compareValues(a.price, b.price, sortDir);
         case 'runFrom': return compareValues(a.runFrom, b.runFrom, sortDir);
@@ -87,8 +96,8 @@ export function SearchPage() {
         default: return 0;
       }
     });
-    return copy;
-  }, [offers, sortKey, sortDir]);
+    return filtered;
+  }, [offers, sortKey, sortDir, filterDate]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -145,6 +154,19 @@ export function SearchPage() {
         </button>
         <div className="flex-1">
           <SearchBar onSearch={handleSearch} initialValue={initialQuery} />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm whitespace-nowrap" htmlFor="filter-date">Dato:</label>
+          <input
+            id="filter-date"
+            type="date"
+            className="input input-bordered input-sm"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+          {filterDate && (
+            <button className="btn btn-ghost btn-xs" onClick={() => setFilterDate('')}>Ryd</button>
+          )}
         </div>
       </div>
 
