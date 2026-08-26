@@ -8,11 +8,10 @@ function formatPrice(kr: number): string {
   return `${kr.toFixed(2)} kr`.replace('.', ',');
 }
 
-function formatPeriod(from: string, till: string): string {
-  const f = new Date(from);
-  const t = new Date(till);
-  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-  return `${f.toLocaleDateString('da-DK', opts)} – ${t.toLocaleDateString('da-DK', opts)}`;
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+  return d.toLocaleDateString('da-DK', opts);
 }
 
 function getThumbUrl(images: string | null): string | null {
@@ -104,7 +103,8 @@ export function SearchPage() {
                 <th className="w-16"></th>
                 <th>Tilbud</th>
                 <th>Pris</th>
-                <th>Gyldig</th>
+                <th>Gyldig fra</th>
+                <th>Gyldig til</th>
                 <th>Kæde</th>
               </tr>
             </thead>
@@ -138,7 +138,10 @@ export function SearchPage() {
                       )}
                     </td>
                     <td className="text-sm whitespace-nowrap">
-                      {formatPeriod(offer.runFrom, offer.runTill)}
+                      {formatDate(offer.runFrom)}
+                    </td>
+                    <td className="text-sm whitespace-nowrap">
+                      {formatDate(offer.runTill)}
                     </td>
                     <td className="text-sm">{offer.chain.name}</td>
                   </tr>
