@@ -3,7 +3,6 @@ package tilbud.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
-import org.springframework.transaction.annotation.Transactional;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -205,12 +204,12 @@ public class OfferIngestionService {
             fetchCatalogOffers(chain, catalogDto, seenCatalogIds);
         }
 
-        deleteStaleCatalogs(chain, seenCatalogIds);
-    }
-
-    @Transactional
-    public void deleteStaleCatalogs(Chain chain, Set<String> seenCatalogIds) {
-        catalogRepository.deleteByChainAndCatalogIdNotIn(chain, seenCatalogIds);
+        List<Catalog> stale = catalogRepository.findByChain(chain).stream()
+            .filter(c -> !seenCatalogIds.contains(c.getCatalogId()))
+            .toList();
+        if (!stale.isEmpty()) {
+            catalogRepository.deleteAll(stale);
+        }
     }
 
     public void fetchChainFallback(Chain chain, Exception e) {
