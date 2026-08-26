@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -103,9 +104,11 @@ public class OfferIngestionService {
 
             Timer.Sample sample = Timer.start(meterRegistry);
 
+            var semaphore = new Semaphore(10);
             try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
                 List<CompletableFuture<Void>> futures = chains.stream()
                     .map(chain -> CompletableFuture.runAsync(() -> {
+                        semaphore.acquireUninterruptibly();
                         try {
                             fetchChain(chain);
                             lastChainsProcessed.incrementAndGet();
@@ -114,6 +117,8 @@ public class OfferIngestionService {
                             lastErrors.incrementAndGet();
                             meterRegistry.counter("etilbudsavis_fetch_errors_total",
                                 "chain", chain.getDealerId()).increment();
+                        } finally {
+                            semaphore.release();
                         }
                     }, executor))
                     .toList();
