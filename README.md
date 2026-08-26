@@ -18,6 +18,13 @@ Search engine for Danish grocery store weekly offers (tilbudsaviser).
                     └──────────────┘
 ```
 
+## Frontend
+
+React SPA with Tailwind CSS and DaisyUI. Two main pages:
+
+- **Landing page** (`/`) — chain table with logos, catalog count, offer count. Date filter narrows to chains with offers valid on selected date. Search navigates to results page.
+- **Search page** (`/search?q=...&date=...`) — offer table with image, heading, price, validity, chain. Sortable columns, client-side date filtering, offer deduplication.
+
 ## Search
 
 The search uses PostgreSQL full-text search on offer headings.
@@ -186,13 +193,6 @@ Actuator exposes `/actuator/health` with database connectivity status.
 - **Observability**: Micrometer, Prometheus, Resilience4j
 - **CI/CD**: GitHub Actions, GitHub Container Registry
 - **API Collection**: Bruno
-
-## Frontend
-
-React SPA with Tailwind CSS and DaisyUI. Two main pages:
-
-- **Landing page** (`/`) — chain table with logos, catalog count, offer count. Date filter narrows to chains with offers valid on selected date. Search navigates to results page.
-- **Search page** (`/search?q=...&date=...`) — offer table with image, heading, price, validity, chain. Sortable columns, client-side date filtering, offer deduplication.
 
 ## Local Development
 
