@@ -206,7 +206,13 @@ public class OfferIngestionService {
             chain.getDealerId(), catalogs.size(), weeklyCatalogs.size());
 
         for (CatalogDto catalogDto : weeklyCatalogs) {
-            fetchCatalogOffers(chain, catalogDto);
+            try {
+                fetchCatalogOffers(chain, catalogDto);
+            } catch (Exception e) {
+                log.error("Error fetching offers for catalog {} in chain {}: {}",
+                    catalogDto.id(), chain.getDealerId(), e.getMessage());
+                lastErrors.incrementAndGet();
+            }
         }
     }
 
