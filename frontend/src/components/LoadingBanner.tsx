@@ -35,14 +35,17 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
 
   if (status.lastRunResult) {
     const r = status.lastRunResult;
-    const runTime = status.lastRun
-      ? new Date(status.lastRun).toLocaleString('da-DK')
-      : 'ukendt';
+    const runDate = status.lastRun
+      ? new Date(status.lastRun).toLocaleDateString('da-DK', { day: 'numeric', month: '2-digit' })
+      : null;
+    const runClock = status.lastRun
+      ? new Date(status.lastRun).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
+      : null;
     return (
       <div className="alert alert-success">
         <div>
           <div className="text-sm">
-            Sidste hentning: {runTime} — {r.chainsProcessed} kæder gennemgået{chainsWithOffers != null ? `, ${chainsWithOffers} med tilbud` : ''}, {r.catalogsProcessed} kataloger, {r.offersInserted.toLocaleString('da-DK')} tilbud
+            Sidste hentning: {runDate}{runClock ? `, klokken ${runClock}` : ''} — {r.chainsProcessed} kæder gennemgået{chainsWithOffers != null ? `, ${chainsWithOffers} med tilbud` : ''}, {r.catalogsProcessed} kataloger, {r.offersInserted.toLocaleString('da-DK')} tilbud
             {r.errors > 0 && <span className="text-error">, {r.errors} fejl</span>}
           </div>
           <div className="text-xs opacity-70 mt-1">
