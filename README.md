@@ -18,6 +18,24 @@ Search engine for Danish grocery store weekly offers (tilbudsaviser).
                     └──────────────┘
 ```
 
+## Quick Start
+
+```bash
+# Clone the repo
+git clone https://github.com/xxx-yyy-zzz-qqq/tilbud.git
+cd tilbud
+
+# Start all services
+./run.sh
+```
+
+This starts:
+- **PostgreSQL** on `localhost:5433`
+- **Spring Boot backend** on `localhost:8080`
+- **React frontend** on `localhost:5173`
+
+`.env.example` is committed with default values. `run.sh` copies it to `.env` automatically on first run. Your local `.env` is gitignored — edit it to override defaults (e.g., different ports or credentials).
+
 ## Frontend
 
 React SPA with Tailwind CSS and DaisyUI. Two main pages:
@@ -199,24 +217,6 @@ Actuator exposes `/actuator/health` with database connectivity status.
 - Docker & Docker Compose
 - Java 25 (for local development without Docker)
 - Node.js 24 (for frontend development without Docker)
-
-### Quick Start
-
-```bash
-# Clone the repo
-git clone https://github.com/xxx-yyy-zzz-qqq/tilbud.git
-cd tilbud
-
-# Start all services
-./run.sh
-```
-
-This starts:
-- **PostgreSQL** on `localhost:5433`
-- **Spring Boot backend** on `localhost:8080`
-- **React frontend** on `localhost:5173`
-
-`.env.example` is committed with default values. `run.sh` copies it to `.env` automatically on first run. Your local `.env` is gitignored — edit it to override defaults (e.g., different ports or credentials).
 
 ### Development Commands
 
