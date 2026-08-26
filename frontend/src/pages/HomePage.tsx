@@ -126,17 +126,17 @@ export function HomePage() {
           </thead>
           <tbody>
             {chains.map((chain) => (
-              <tr key={chain.dealerId} className="leading-none">
+              <tr key={chain.dealerId} className="leading-none overflow-visible">
                 <td className="relative overflow-visible">
                   {chain.logoUrl ? (
                     <img
                       src={chain.logoUrl}
                       alt={chain.name}
-                      className="w-16 h-16 object-contain rounded transition-transform duration-200 hover:scale-[2.5] hover:absolute hover:z-10"
+                      className="w-16 h-16 object-contain rounded transition-transform duration-200 hover:scale-[2.5] origin-left"
                     />
                   ) : (
                     <div
-                      className="w-16 h-16 rounded flex items-center justify-center text-lg font-bold text-white transition-transform duration-200 hover:scale-[2.5] hover:absolute hover:z-10"
+                      className="w-16 h-16 rounded flex items-center justify-center text-lg font-bold text-white transition-transform duration-200 hover:scale-[2.5] origin-left"
                       style={{ backgroundColor: `#${chain.color || '999'}` }}
                     >
                       {chain.name.charAt(0)}
