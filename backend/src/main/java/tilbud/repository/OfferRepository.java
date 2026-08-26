@@ -15,25 +15,21 @@ public interface OfferRepository extends JpaRepository<Offer, UUID> {
     long countByChain(Chain chain);
 
     @Query(value = """
-        SELECT *,
-            ts_rank_cd(to_tsvector('simple', heading_normalized),
-                       to_tsquery('simple', :query)) AS rank
+        SELECT *
         FROM offers
         WHERE to_tsvector('simple', heading_normalized) @@ to_tsquery('simple', :query)
-        ORDER BY rank DESC, price ASC
+        ORDER BY price ASC
         """, nativeQuery = true)
     List<Offer> search(String query);
 
     @Query(value = """
-        SELECT *,
-            ts_rank_cd(to_tsvector('simple', heading_normalized),
-                       to_tsquery('simple', :query)) AS rank
+        SELECT *
         FROM offers
         WHERE to_tsvector('simple', heading_normalized) @@ to_tsquery('simple', :query)
         AND (:chainId IS NULL OR chain_id = :chainId)
         AND (:minPrice IS NULL OR price >= :minPrice)
         AND (:maxPrice IS NULL OR price <= :maxPrice)
-        ORDER BY rank DESC, price ASC
+        ORDER BY price ASC
         """, nativeQuery = true)
     List<Offer> searchWithFilters(String query, UUID chainId, Integer minPrice, Integer maxPrice);
 

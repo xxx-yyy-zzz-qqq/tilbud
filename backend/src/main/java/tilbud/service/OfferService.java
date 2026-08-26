@@ -88,7 +88,7 @@ public class OfferService {
                 .collect(Collectors.toList());
         }
 
-        // Sort (DB search already sorts by rank DESC, price ASC)
+        // Sort (DB search already sorts by price ASC)
         if (query.getQ() == null || query.getQ().isBlank()) {
             results.sort((a, b) -> switch (query.getSort() != null ? query.getSort() : "date_desc") {
                 case "price_asc" -> Integer.compare(a.getPrice(), b.getPrice());

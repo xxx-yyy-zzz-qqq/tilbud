@@ -74,8 +74,7 @@ The search uses PostgreSQL full-text search on offer headings.
 1. **User input**: One or more words (e.g., "arla minimælk")
 2. **Normalization**: Input is lowercased, punctuation stripped → `arla | minimælk`
 3. **Matching**: OR logic — any offer matching **one or more** words appears in results
-4. **Ranking**: Offers matching more words rank higher (`ts_rank_cd` score)
-5. **Sorting**: Within same rank, sorted by price ascending (cheapest first)
+4. **Sorting**: Results sorted by price ascending (cheapest first)
 
 ### PostgreSQL Functions Used
 
@@ -84,7 +83,6 @@ The search uses PostgreSQL full-text search on offer headings.
 | `to_tsvector('simple', text)` | Converts text to normalized tokens (lowercase, stripped) |
 | `to_tsquery('simple', 'word1 \| word2')` | Converts search words to query format with OR operator |
 | `@@` operator | Matches documents against query — returns true if any word matches |
-| `ts_rank_cd()` | Computes rank score (0-1) based on term density — more matching words = higher rank |
 
 ### Example
 
@@ -94,12 +92,12 @@ Search: "arla minimælk"
 Normalized: 'arla' | 'minimælk'
 
 Results:
-1. "Arla Minimælk 1L" — matches both words (rank: 0.6)
-2. "Arla D-mælk" — matches "arla" (rank: 0.3)
-3. "Minimælk 0.5L" — matches "minimælk" (rank: 0.3)
-4. "Arla Cream Cheese" — matches "arla" (rank: 0.3)
+1. "Arla D-mælk" — matches "arla"
+2. "Arla Cream Cheese" — matches "arla"
+3. "Minimælk 0.5L" — matches "minimælk"
+4. "Arla Minimælk 1L" — matches both words
 
-Sorted by: rank DESC, price ASC (cheapest first within same rank)
+Sorted by: price ASC (cheapest first)
 ```
 
 ### GIN Index
