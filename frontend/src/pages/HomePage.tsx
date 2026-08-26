@@ -33,7 +33,13 @@ export function HomePage() {
           return { ...chain, catalog } as ChainWithCatalog;
         })
       );
-      withCatalogs.sort((a, b) => a.name.localeCompare(b.name, 'da'));
+      withCatalogs.sort((a, b) => {
+        if (a.offerCount === 0 && b.offerCount === 0) return a.name.localeCompare(b.name, 'da');
+        if (a.offerCount === 0) return 1;
+        if (b.offerCount === 0) return -1;
+        if (b.offerCount !== a.offerCount) return b.offerCount - a.offerCount;
+        return a.name.localeCompare(b.name, 'da');
+      });
       setChains(withCatalogs);
     } catch (err) {
       console.error('Failed to load chains:', err);
