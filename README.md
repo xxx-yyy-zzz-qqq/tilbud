@@ -74,55 +74,6 @@ Public API: `api.etilbudsavis.dk/v2`
 |----------|---------|------|
 | `GET /v2/catalogs?dealer_ids={chain}` | Get catalogs for a chain | None |
 | `GET /v2/offers?catalog_ids={catalog_id}` | Get offers for a catalog | None |
-| `GET /v2/offers?dealer_ids={chain}` | Get ALL offers (superset) | None |
-
-### Key Findings
-
-- **Use `catalog_ids` filter** for weekly offers (not `dealer_ids`)
-- `dealer_ids` returns all active offers including previous weeks and permanent price drops
-- `catalog_ids` returns offers for a specific catalog/week only
-- API matches PDF flyers at 94-100% across all chains
-- Catalog IDs are random 8-character strings (not sequential)
-- **All 10 chains have catalogs** (Føtex was incorrectly listed as having no catalogs)
-- Always filter by `dealer_ids` when querying catalogs — global endpoint caps at 1000
-
-### API vs PDF Comparison
-
-Comparison of API offers (filtered by `catalog_ids`) against actual PDF flyers:
-
-| Chain | Catalog | Type | API | Claimed | Match | % | Notes |
-|-------|---------|------|-----|---------|-------|---|-------|
-| Netto | uge 35 Nonfood | NONFOOD | 49 | 49 | 49 | **100%** | |
-| Netto | uge 35 | MAIN | 201 | 205 | 201 | **100%** | |
-| REMA 1000 | Uge 35 | MAIN | 107 | 107 | 107 | **100%** | |
-| REMA 1000 | Uge 34 Indstik | SUPPLEMENT | 14 | 14 | 14 | **100%** | |
-| Lidl | avis (uge 35) | MAIN | 224 | 225 | 221 | **99%** | 3 missing (banan, strygejern, røgalarm) |
-| Lidl | Weekendavis (uge 34) | SUPPLEMENT | 208 | 210 | 205 | **99%** | 3 missing |
-| Bilka | Nonfood Uge 35 | NONFOOD | 281 | 294 | 264 | **94%** | 17 missing (lingeri, kølebokse) |
-| Bilka | Food Uge 35 | FOOD | 202 | 208 | 195 | **97%** | 7 missing (spiritus, hårpleje) |
-| Føtex | Uge 34/35 | MAIN | 320 | 331 | 316 | **99%** | 4 missing (nonfood: Oral-B, TV, Nilfisk) |
-| SuperBrugsen | Uge 34 | MAIN | 149 | 150 | 148 | **99%** | 1 missing |
-| Kvickly | Uge 34 | MAIN | 208 | 209 | 207 | **100%** | 1 missing |
-| 365discount | Uge 34 | MAIN | 143 | 145 | 143 | **100%** | |
-| MENY | uge 35 | MAIN | 125 | 126 | 124 | **99%** | 1 missing |
-| SPAR | uge 35 | MAIN | 84 | 84 | 83 | **99%** | 1 missing |
-
-**Summary**: 94-100% match across all chains. API is the source of truth.
-
-## Target Chains
-
-| Chain | Dealer ID | Food | Nonfood | Supplement |
-|-------|-----------|------|---------|------------|
-| Netto | `9ba51` | Yes | Yes | No |
-| REMA 1000 | `11deC` | Yes | No | Indstik |
-| Lidl | `71c90` | Yes | No | Weekendavis |
-| Bilka | `93f13` | Yes | Yes | No |
-| Føtex | `bdf5A` | Yes | No | No |
-| SuperBrugsen | `0b1e8` | Yes | No | No |
-| Kvickly | `c1edq` | Yes | No | No |
-| 365discount | `DWZE1w` | Yes | No | No |
-| MENY | `267e1m` | Yes | No | No |
-| SPAR | `88ddE` | Yes | No | No |
 
 ## Fetch Strategy
 
@@ -135,30 +86,23 @@ Data is fetched from the external API once on application startup. No automatic 
 | Application startup | Load initial data |
 | Manual re-fetch | `POST /api/v1/ingestion/trigger` (frontend button) |
 
-### Catalog Filtering
-
-Not all catalogs are weekly promotional catalogs. We filter using:
-- **Duration ≥ 1 day** — excludes catalogs with no valid date range
-
-All catalogs regardless of length are included (removed 14-day filter to support chains like CBC with 41-day catalogs).
-
 ### Delete Strategy
 
 Per-chain delete-all-then-insert:
 1. Delete ALL catalogs for a chain (via JdbcTemplate, bypasses Hibernate)
-2. Fetch weekly catalogs from API
+2. Fetch latest catalogs from API
 3. Create catalogs + insert offers only for non-empty results
 4. ON DELETE CASCADE handles offer cleanup
 
 ### Parallelism
 
-All chains are fetched sequentially on a single virtual thread. Parallelization deferred (see issue #24).
+All chains are fetched in parallel using virtual threads (one per chain, semaphore limits concurrent API calls).
 
 ### Resilience
 
+- **HTTP timeouts**: Connect 5s, Read 15s — no chain hangs forever
 - **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
-- **Circuit breaker**: Per chain — 3 consecutive failures → open for 60s → half-open → retry once
-- **Manual re-fetch**: `POST /api/v1/ingestion/trigger` (frontend button)
+- **Per-catalog error handling**: One failed catalog doesn't kill the whole chain
 
 ## Observability
 
