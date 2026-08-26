@@ -37,6 +37,34 @@ function getZoomUrl(images: string | null): string | null {
   }
 }
 
+function formatQuantity(quantity: string | null): string {
+  if (!quantity) return '';
+  try {
+    const q = JSON.parse(quantity);
+    const unit = q.unit?.symbol || '';
+    const sizeFrom = q.size?.from;
+    const sizeTo = q.size?.to;
+    const piecesFrom = q.pieces?.from;
+    const piecesTo = q.pieces?.to;
+    const piecesMax = q.pieces?.max;
+
+    const sizeStr = sizeFrom != null
+      ? sizeFrom === sizeTo ? `${sizeFrom}` : `${sizeFrom}-${sizeTo}`
+      : '';
+    const unitStr = sizeStr && unit ? `${sizeStr} ${unit}` : unit || '';
+
+    if (piecesFrom != null && unitStr) {
+      const piecesStr = piecesFrom === piecesTo ? `${piecesFrom}` : `${piecesFrom}-${piecesTo}`;
+      const maxStr = piecesMax ? ` (maks ${piecesMax})` : '';
+      return `${piecesStr} × ${unitStr}${maxStr}`;
+    }
+    if (unitStr) return unitStr;
+    return '';
+  } catch {
+    return '';
+  }
+}
+
 function dedupOffers(offers: OfferResponse[]): OfferResponse[] {
   const seen = new Set<string>();
   return offers.filter((o) => {
@@ -196,6 +224,7 @@ export function SearchPage() {
                 <th className={thClass('price')} onClick={() => toggleSort('price')}>
                   Pris<SortIcon column="price" />
                 </th>
+                <th>Mængde</th>
                 <th className={thClass('runFrom')} onClick={() => toggleSort('runFrom')}>
                   Gyldig fra<SortIcon column="runFrom" />
                 </th>
@@ -240,6 +269,7 @@ export function SearchPage() {
                         </span>
                       )}
                     </td>
+                    <td className="text-sm whitespace-nowrap">{formatQuantity(offer.quantity)}</td>
                     <td className="text-sm whitespace-nowrap">
                       {formatDate(offer.runFrom)}
                     </td>
