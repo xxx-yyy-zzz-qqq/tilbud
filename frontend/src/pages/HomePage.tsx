@@ -7,6 +7,7 @@ import type { ChainResponse, CatalogResponse, IngestionStatus } from '../types';
 
 interface ChainWithCatalog extends ChainResponse {
   catalog: CatalogResponse | null;
+  catalogCount: number;
 }
 
 function formatPeriod(from: string, till: string): string {
@@ -30,7 +31,7 @@ export function HomePage() {
         chainList.map(async (chain) => {
           const catalogs = await fetchCatalogs(chain.dealerId);
           const catalog = catalogs.length > 0 ? catalogs[0] : null;
-          return { ...chain, catalog } as ChainWithCatalog;
+          return { ...chain, catalog, catalogCount: catalogs.length } as ChainWithCatalog;
         })
       );
       withCatalogs.sort((a, b) => {
@@ -98,7 +99,7 @@ export function HomePage() {
         </button>
       </div>
 
-      <LoadingBanner status={status} />
+      <LoadingBanner status={status} chainsWithOffers={chains.filter(c => c.offerCount > 0).length} />
 
       <div className="mt-4 mb-6">
         <SearchBar onSearch={handleSearch} />
@@ -118,6 +119,7 @@ export function HomePage() {
             <tr>
               <th>Navn</th>
               <th>Tilbudsperiode</th>
+              <th className="text-right">Kataloger</th>
               <th className="text-right">Antal tilbud</th>
             </tr>
           </thead>
@@ -130,6 +132,7 @@ export function HomePage() {
                     ? formatPeriod(chain.catalog.runFrom, chain.catalog.runTill)
                     : '—'}
                 </td>
+                <td className="text-right">{chain.catalogCount}</td>
                 <td className="text-right">{chain.offerCount}</td>
               </tr>
             ))}

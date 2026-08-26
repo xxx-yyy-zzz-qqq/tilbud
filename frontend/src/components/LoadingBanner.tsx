@@ -2,9 +2,10 @@ import type { IngestionStatus } from '../types';
 
 interface LoadingBannerProps {
   status: IngestionStatus | null;
+  chainsWithOffers?: number;
 }
 
-export function LoadingBanner({ status }: LoadingBannerProps) {
+export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) {
   if (!status) {
     return (
       <div className="alert alert-info">
@@ -23,7 +24,7 @@ export function LoadingBanner({ status }: LoadingBannerProps) {
           <div className="font-bold">Henter tilbud...</div>
           {r && (
             <div className="text-sm">
-              {r.chainsProcessed} kæder, {r.offersInserted} tilbud hentet
+              {r.chainsProcessed} kæder gennemgået, {r.offersInserted.toLocaleString('da-DK')} tilbud hentet
               {r.errors > 0 && <span className="text-error">, {r.errors} fejl</span>}
             </div>
           )}
@@ -41,7 +42,7 @@ export function LoadingBanner({ status }: LoadingBannerProps) {
       <div className="alert alert-success">
         <div>
           <div className="text-sm">
-            Sidste hentning: {runTime} — {r.chainsProcessed} kæder, {r.catalogsProcessed} kataloger, {r.offersInserted} tilbud
+            Sidste hentning: {runTime} — {r.chainsProcessed} kæder gennemgået{chainsWithOffers != null ? `, ${chainsWithOffers} med tilbud` : ''}, {r.catalogsProcessed} kataloger, {r.offersInserted.toLocaleString('da-DK')} tilbud
             {r.errors > 0 && <span className="text-error">, {r.errors} fejl</span>}
           </div>
         </div>
