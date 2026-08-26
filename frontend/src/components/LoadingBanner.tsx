@@ -54,6 +54,9 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
           <div className="text-xs opacity-70">
             Henter seneste tilgængelige katalog; tilbudsperioden vil derfor ofte variere på tværs af kæderne.
           </div>
+          <div className="text-xs opacity-70">
+            Data hentes fra <a href="https://api.etilbudsavis.dk" target="_blank" rel="noopener noreferrer" className="underline">api.etilbudsavis.dk</a> og præsenteres as is.
+          </div>
         </div>
       </div>
     );
