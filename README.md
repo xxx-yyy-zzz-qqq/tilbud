@@ -290,13 +290,3 @@ cd backend
 | `API_BASE_URL` | `https://api.etilbudsavis.dk/v2` | External API URL |
 | `VITE_API_URL` | `http://localhost:8080` | Backend API URL for frontend |
 
-## Research
-
-See `research/` directory for API discovery, legal review, and feasibility studies.
-
-Key files:
-- `research/api-discovery.md` — Full API documentation and offer completeness analysis
-- `research/legal-tos-review.md` — Legal/ToS research findings
-- `research/scraper-feasibility.md` — Superseded by public API
-
-
