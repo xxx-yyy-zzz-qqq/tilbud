@@ -96,7 +96,7 @@ Per-chain delete-all-then-insert:
 
 ### Parallelism
 
-All chains are fetched in parallel using virtual threads (one per chain, semaphore limits concurrent API calls).
+All chains are fetched in parallel using virtual threads. Each chain gets its own virtual thread via `Executors.newVirtualThreadPerTaskExecutor()`. A semaphore limits concurrent API calls to avoid overwhelming the external API (which enforces HTTP/2 stream limits). The concurrency level is configurable via `ingestion.fetch-concurrency` (default:10). HikariCP connection pool is sized to match (default:15).
 
 ### Resilience
 
