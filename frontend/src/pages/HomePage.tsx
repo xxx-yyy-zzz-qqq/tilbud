@@ -183,7 +183,8 @@ export function HomePage() {
         <table className="table table-zebra w-full [&_td]:py-1 [&_th]:py-1">
           <thead>
             <tr>
-              <th className="w-20">Kæde</th>
+              <th className="w-12">Fravælg</th>
+              <th>Kæde</th>
               <th>Tilbudsperiode</th>
               <th className="text-right">Kataloger</th>
               <th className="text-right">Antal tilbud</th>
@@ -192,19 +193,21 @@ export function HomePage() {
           <tbody>
             {filteredChains.map((chain) => (
               <tr key={chain.dealerId} className="leading-none overflow-visible">
+                <td className="text-center">
+                  <button
+                    className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none"
+                    title={`Skjul ${chain.name}`}
+                    onClick={() => {
+                      setExcludedChains((prev) => {
+                        const next = new Set(prev);
+                        next.add(chain.dealerId);
+                        return next;
+                      });
+                    }}
+                  >−</button>
+                </td>
                 <td className="relative overflow-visible">
-                  <div className="flex items-center gap-1">
-                    <button
-                      className="btn btn-ghost btn-sm text-base-content/50 hover:text-error cursor-pointer px-1 min-h-0 h-auto leading-none shrink-0"
-                      title={`Skjul ${chain.name}`}
-                      onClick={() => {
-                        setExcludedChains((prev) => {
-                          const next = new Set(prev);
-                          next.add(chain.dealerId);
-                          return next;
-                        });
-                      }}
-                    >−</button>
+                  <div className="flex items-center gap-2">
                     {chain.logoUrl ? (
                       <img
                         src={chain.logoUrl}
@@ -219,9 +222,9 @@ export function HomePage() {
                         {chain.name.charAt(0)}
                       </div>
                     )}
+                    <span className="font-medium">{chain.name}</span>
                   </div>
                 </td>
-                <td className="font-medium">{chain.name}</td>
                 <td>
                   {chain.catalog
                     ? formatPeriod(chain.catalog.runFrom, chain.catalog.runTill)
