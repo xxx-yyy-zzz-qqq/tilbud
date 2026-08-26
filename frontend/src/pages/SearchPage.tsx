@@ -79,8 +79,8 @@ export function SearchPage() {
   };
 
   const SortIcon = ({ column }: { column: SortKey }) => {
-    if (sortKey !== column) return <span className="opacity-40 ml-1.5 text-sm">⇅</span>;
-    return <span className="ml-1.5 text-sm">{sortDir === 'asc' ? '↑' : '↓'}</span>;
+    if (sortKey !== column) return <span className="opacity-50 ml-1.5 text-xs">▲▼</span>;
+    return <span className="ml-1.5 text-sm text-primary font-bold">{sortDir === 'asc' ? '▲' : '▼'}</span>;
   };
 
   const thClass = (key: SortKey) =>
