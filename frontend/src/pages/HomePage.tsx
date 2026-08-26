@@ -149,6 +149,9 @@ export function HomePage() {
 
       {excludedChains.size > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
+          <span className="badge badge-outline gap-1 cursor-pointer hover:bg-base-200" onClick={() => setExcludedChains(new Map())}>
+            Vælg alle
+          </span>
           {[...excludedChains.entries()].map(([dealerId]) => {
             const chain = chains.find((c) => c.dealerId === dealerId);
             const name = chain?.name || excludedChains.get(dealerId) || dealerId;

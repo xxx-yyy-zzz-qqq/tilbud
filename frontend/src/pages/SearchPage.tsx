@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchAllOffers } from '../api';
+import { fetchAllOffers, fetchChains } from '../api';
 import { SearchBar } from '../components/SearchBar';
 import type { OfferResponse } from '../types';
 
@@ -178,25 +178,24 @@ export function SearchPage() {
     }
   }, []);
 
-  // Fill in chain names from offers after they load (handles URL-excluded chains)
+  // Fetch chain names once to resolve excluded chain names from URL
   useEffect(() => {
-    if (offers.length > 0) {
-      setExcludedChains((prev) => {
-        let changed = false;
-        const next = new Map(prev);
-        for (const [dealerId, name] of prev) {
-          if (!name) {
-            const offer = offers.find((o) => o.chain.dealerId === dealerId);
-            if (offer) {
-              next.set(dealerId, offer.chain.name);
+    if (excludedChains.size > 0) {
+      fetchChains().then((chainList) => {
+        setExcludedChains((prev) => {
+          let changed = false;
+          const next = new Map(prev);
+          for (const chain of chainList) {
+            if (prev.has(chain.dealerId) && !prev.get(chain.dealerId)) {
+              next.set(chain.dealerId, chain.name);
               changed = true;
             }
           }
-        }
-        return changed ? next : prev;
-      });
+          return changed ? next : prev;
+        });
+      }).catch(() => {});
     }
-  }, [offers]);
+  }, []);
 
   const handleSearch = (q: string) => {
     const params = new URLSearchParams();
@@ -239,6 +238,9 @@ export function SearchPage() {
 
       {excludedChains.size > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
+          <span className="badge badge-outline gap-1 cursor-pointer hover:bg-base-200" onClick={() => setExcludedChains(new Map())}>
+            Vælg alle
+          </span>
           {[...excludedChains.entries()].map(([dealerId, name]) => {
             return (
               <span key={dealerId} className="badge badge-outline gap-1">
