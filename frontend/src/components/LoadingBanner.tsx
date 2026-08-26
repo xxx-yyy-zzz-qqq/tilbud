@@ -36,7 +36,7 @@ export function LoadingBanner({ status, chainsWithOffers }: LoadingBannerProps) 
   if (status.lastRunResult) {
     const r = status.lastRunResult;
     const runDate = status.lastRun
-      ? new Date(status.lastRun).toLocaleDateString('da-DK', { day: 'numeric', month: '2-digit' })
+      ? new Date(status.lastRun).toLocaleDateString('da-DK', { day: 'numeric', month: '2-digit', year: 'numeric' })
       : null;
     const runClock = status.lastRun
       ? new Date(status.lastRun).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
