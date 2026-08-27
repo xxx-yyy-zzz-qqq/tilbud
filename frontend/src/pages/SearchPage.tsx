@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchAllOffers, fetchChains } from '../api';
+import { fetchAllOffers, fetchChains, fetchIngestionStatus } from '../api';
 import { SearchBar } from '../components/SearchBar';
 import type { OfferResponse } from '../types';
 import { formatPrice, formatDate, getImageUrl, getZoomUrl, formatQuantity, compareValues } from '../utils';
@@ -38,6 +38,7 @@ export function SearchPage() {
   });
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
+  const [ingestionRunning, setIngestionRunning] = useState(false);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') { setZoomImage(null); setHoverImage(null); }
@@ -115,6 +116,20 @@ export function SearchPage() {
     }
   }, []);
 
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    const poll = async () => {
+      try {
+        const s = await fetchIngestionStatus();
+        setIngestionRunning(s.running);
+        if (!s.running) clearInterval(interval);
+      } catch { /* ignore */ }
+    };
+    poll();
+    interval = setInterval(poll, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Fetch chain names once to resolve excluded chain names from URL
   useEffect(() => {
     if (excludedChains.size > 0) {
@@ -156,7 +171,7 @@ export function SearchPage() {
           Hjem
         </button>
         <div className="flex-1">
-          <SearchBar onSearch={handleSearch} initialValue={initialQuery} />
+          <SearchBar onSearch={handleSearch} initialValue={initialQuery} disabled={ingestionRunning} />
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm whitespace-nowrap" htmlFor="filter-date">Dato (valgfri):</label>

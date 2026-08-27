@@ -124,7 +124,7 @@ export function HomePage() {
 
       <div className="mt-4 mb-6 flex items-center gap-4">
         <div className="flex-1">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} disabled={status?.running} />
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm whitespace-nowrap" htmlFor="filter-date">Dato (valgfri):</label>

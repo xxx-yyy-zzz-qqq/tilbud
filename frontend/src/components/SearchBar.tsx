@@ -3,14 +3,15 @@
 interface SearchBarProps {
   onSearch: (query: string) => void;
   initialValue?: string;
+  disabled?: boolean;
 }
 
-export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
+export function SearchBar({ onSearch, initialValue = '', disabled = false }: SearchBarProps) {
   const [value, setValue] = useState(initialValue);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(value.trim());
+    if (!disabled) onSearch(value.trim());
   };
 
   return (
@@ -21,8 +22,9 @@ export function SearchBar({ onSearch, initialValue = '' }: SearchBarProps) {
         className="input input-bordered flex-1"
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        disabled={disabled}
       />
-      <button type="submit" className="btn btn-primary">
+      <button type="submit" className="btn btn-primary" disabled={disabled}>
         Søg
       </button>
     </form>
