@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { SearchPage } from '../pages/SearchPage';
 import { HomePage } from '../pages/HomePage';
-import type { OfferResponse, ChainResponse, CatalogResponse, IngestionStatus } from '../types';
+import type { OfferResponse, ChainResponse, CatalogResponse } from '../types';
 
 vi.mock('../api', () => ({
   fetchAllOffers: vi.fn(),
@@ -309,7 +309,7 @@ describe('HomePage', () => {
     const rows = screen.getAllByRole('row');
     const nettoRow = rows.find((r) => within(r).queryByText('Netto'));
     expect(nettoRow).toBeDefined();
-    const periodCell = within(nettoRow!).getAllByRole('cell')[2];
+    const periodCell = within(nettoRow!).getAllByRole('cell')[2]!;
     expect(periodCell.textContent).toMatch(/\d/);
   });
 
@@ -324,7 +324,7 @@ describe('HomePage', () => {
     const rows = screen.getAllByRole('row');
     const aldiRow = rows.find((r) => within(r).queryByText('Aldi'));
     expect(aldiRow).toBeDefined();
-    const periodCell = within(aldiRow!).getAllByRole('cell')[2];
+    const periodCell = within(aldiRow!).getAllByRole('cell')[2]!;
     expect(periodCell.textContent).toBe('—');
   });
 
@@ -400,7 +400,7 @@ describe('HomePage', () => {
     const rows = screen.getAllByRole('row');
     const nettoRow = rows.find((r) => within(r).queryByText('Netto'));
     const cells = within(nettoRow!).getAllByRole('cell');
-    expect(cells[3].textContent).toBe('1');
-    expect(cells[4].textContent).toBe('50');
+    expect(cells[3]!.textContent).toBe('1');
+    expect(cells[4]!.textContent).toBe('50');
   });
 });
