@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchAllOffers } from '../api';
+import { fetchAllOffers, fetchChains } from '../api';
 import { SearchBar } from '../components/SearchBar';
 import type { OfferResponse } from '../types';
 import { formatPrice, formatDate, getImageUrl, getZoomUrl, formatQuantity, compareValues } from '../utils';
@@ -31,7 +31,11 @@ export function SearchPage() {
   const [sortKey, setSortKey] = useState<SortKey>('price');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [filterDate, setFilterDate] = useState<string>(initialDate);
-  const [excludedChains, setExcludedChains] = useState<Map<string, string>>(new Map());
+  const [excludedChains, setExcludedChains] = useState<Map<string, string>>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const exclude = params.get('exclude');
+    return exclude ? new Map(exclude.split(',').map((id) => [id, ''])) : new Map();
+  });
   const [zoomImage, setZoomImage] = useState<{ src: string; alt: string } | null>(null);
   const [hoverImage, setHoverImage] = useState<{ src: string; alt: string; rect: DOMRect } | null>(null);
 
@@ -111,10 +115,30 @@ export function SearchPage() {
     }
   }, []);
 
+  // Fetch chain names once to resolve excluded chain names from URL
+  useEffect(() => {
+    if (excludedChains.size > 0) {
+      fetchChains().then((chainList) => {
+        setExcludedChains((prev) => {
+          let changed = false;
+          const next = new Map(prev);
+          for (const chain of chainList) {
+            if (prev.has(chain.dealerId) && !prev.get(chain.dealerId)) {
+              next.set(chain.dealerId, chain.name);
+              changed = true;
+            }
+          }
+          return changed ? next : prev;
+        });
+      }).catch(() => {});
+    }
+  }, []);
+
   const handleSearch = (q: string) => {
     const params = new URLSearchParams();
     params.set('q', q);
     if (filterDate) params.set('date', filterDate);
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains.keys()].join(','));
     navigate(`/search?${params.toString()}`, { replace: true });
     doSearch(q);
   };
@@ -125,6 +149,7 @@ export function SearchPage() {
         <button className="btn btn-outline btn-sm" onClick={() => {
           const params = new URLSearchParams();
           if (filterDate) params.set('date', filterDate);
+    if (excludedChains.size > 0) params.set('exclude', [...excludedChains.keys()].join(','));
           const qs = params.toString();
           navigate(qs ? `/?${qs}` : '/');
         }}>
