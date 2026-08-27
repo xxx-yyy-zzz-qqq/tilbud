@@ -20,11 +20,7 @@ export function HomePage() {
     const params = new URLSearchParams(window.location.search);
     return params.get('date') || '';
   });
-  const [excludedChains, setExcludedChains] = useState<Map<string, string>>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const exclude = params.get('exclude');
-    return exclude ? new Map(exclude.split(',').map((id) => [id, ''])) : new Map();
-  });
+  const [excludedChains, setExcludedChains] = useState<Map<string, string>>(new Map());
 
   const loadChains = useCallback(async () => {
     setLoading(true);
@@ -76,7 +72,6 @@ export function HomePage() {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (filterDate) params.set('date', filterDate);
-    if (excludedChains.size > 0) params.set('exclude', [...excludedChains.keys()].join(','));
     navigate(`/search?${params.toString()}`);
   };
 
