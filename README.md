@@ -82,6 +82,7 @@ All chains are fetched in parallel using virtual threads. Each chain gets its ow
 
 - **HTTP timeouts**: Connect 5s, Read 15s — no chain hangs forever
 - **Retry**: 3 attempts with exponential backoff (1s, 2s, 4s)
+- **⚠️ Silent failures**: If a chain's catalog or offer fetch fails after retries, the error is logged in the backend but **not surfaced in the frontend**. The chain simply appears with 0 offers. Check backend logs to diagnose.
 
 ## Search
 
