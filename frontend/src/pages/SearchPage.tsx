@@ -3,67 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchAllOffers, fetchChains } from '../api';
 import { SearchBar } from '../components/SearchBar';
 import type { OfferResponse } from '../types';
+import { formatPrice, formatDate, getImageUrl, getZoomUrl, formatQuantity, compareValues } from '../utils';
+import type { SortDir } from '../utils';
 
 type SortKey = 'price' | 'runFrom' | 'runTill' | 'chain';
-type SortDir = 'asc' | 'desc';
-
-function formatPrice(kr: number): string {
-  return `${kr.toFixed(2)} kr`.replace('.', ',');
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
-  return d.toLocaleDateString('da-DK', opts);
-}
-
-function getImageUrl(images: string | null): string | null {
-  if (!images) return null;
-  try {
-    const parsed = JSON.parse(images);
-    return parsed.view || parsed.thumb || null;
-  } catch {
-    return null;
-  }
-}
-
-function getZoomUrl(images: string | null): string | null {
-  if (!images) return null;
-  try {
-    const parsed = JSON.parse(images);
-    return parsed.zoom || parsed.view || parsed.thumb || null;
-  } catch {
-    return null;
-  }
-}
-
-function formatQuantity(quantity: string | null): string {
-  if (!quantity) return '';
-  try {
-    const q = JSON.parse(quantity);
-    const unit = q.unit?.symbol || '';
-    const sizeFrom = q.size?.from;
-    const sizeTo = q.size?.to;
-    const piecesFrom = q.pieces?.from;
-    const piecesTo = q.pieces?.to;
-    const piecesMax = q.pieces?.max;
-
-    const sizeStr = sizeFrom != null
-      ? sizeFrom === sizeTo ? `${sizeFrom}` : `${sizeFrom}-${sizeTo}`
-      : '';
-    const unitStr = sizeStr && unit ? `${sizeStr} ${unit}` : unit || '';
-
-    if (piecesFrom != null && unitStr) {
-      const piecesStr = piecesFrom === piecesTo ? `${piecesFrom}` : `${piecesFrom}-${piecesTo}`;
-      const maxStr = piecesMax ? ` (maks ${piecesMax})` : '';
-      return `${piecesStr} × ${unitStr}${maxStr}`;
-    }
-    if (unitStr) return unitStr;
-    return '';
-  } catch {
-    return '';
-  }
-}
 
 function dedupOffers(offers: OfferResponse[]): OfferResponse[] {
   const seen = new Set<string>();
@@ -73,12 +16,6 @@ function dedupOffers(offers: OfferResponse[]): OfferResponse[] {
     seen.add(key);
     return true;
   });
-}
-
-function compareValues(a: number | string, b: number | string, dir: SortDir): number {
-  const mul = dir === 'asc' ? 1 : -1;
-  if (typeof a === 'number' && typeof b === 'number') return (a - b) * mul;
-  return String(a).localeCompare(String(b), 'da') * mul;
 }
 
 export function SearchPage() {

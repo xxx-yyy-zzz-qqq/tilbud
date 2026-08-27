@@ -4,17 +4,11 @@ import { fetchChains, fetchCatalogs, fetchIngestionStatus, triggerIngestion } fr
 import { LoadingBanner } from '../components/LoadingBanner';
 import { SearchBar } from '../components/SearchBar';
 import type { ChainResponse, CatalogResponse, IngestionStatus } from '../types';
+import { formatPeriod } from '../utils';
 
 interface ChainWithCatalog extends ChainResponse {
   catalog: CatalogResponse | null;
   catalogCount: number;
-}
-
-function formatPeriod(from: string, till: string): string {
-  const f = new Date(from);
-  const t = new Date(till);
-  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-  return `${f.toLocaleDateString('da-DK', opts)} – ${t.toLocaleDateString('da-DK', opts)}`;
 }
 
 export function HomePage() {
