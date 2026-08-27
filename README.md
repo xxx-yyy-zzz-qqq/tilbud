@@ -1,4 +1,4 @@
-# Tilbud — Danish Grocery Ads
+# Tilbudsaviser
 
 **Disclaimer**: This project fetches data from a public API (`api.etilbudsavis.dk`). The API provider's terms of service may restrict commercial use or redistribution of the data. This project is for personal/educational use only. Users are responsible for complying with the API provider's terms.
 
