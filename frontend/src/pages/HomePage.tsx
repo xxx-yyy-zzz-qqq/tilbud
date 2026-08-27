@@ -81,6 +81,7 @@ export function HomePage() {
   };
 
   const handleRefetch = async () => {
+    setStatus((prev) => prev ? { ...prev, running: true } : { running: true, lastRun: null, lastRunResult: null });
     try {
       await triggerIngestion();
       setLoading(true);
@@ -93,7 +94,7 @@ export function HomePage() {
         }
       }, 2000);
     } catch {
-      // already showing status
+      setStatus((prev) => prev ? { ...prev, running: false } : null);
     }
   };
 
