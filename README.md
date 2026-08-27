@@ -2,7 +2,6 @@
 
 **Disclaimer**: This project fetches data from the public `api.etilbudsavis.dk/v2` API, operated by [Tjek A/S](https://tjek.com) (Denmark). Tjek's published [Terms and Conditions](https://tjek.com/terms) (Section 8) restrict API use to a Customer's own platforms and prohibit third-party systematic fetching. However, those terms appear to govern commercial Customers with signed agreements — the public, unauthenticated API endpoint used here is not explicitly covered. No separate ToS exists for the public endpoint. This project is for personal/educational use only. Users are responsible for their own compliance.
 
-Search engine for Danish grocery store offers (tilbudsaviser).
 
 ## Architecture
 
