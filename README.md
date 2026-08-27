@@ -1,8 +1,8 @@
-# Tilbud — Danish Grocery Weekly Ads
+# Tilbud — Danish Grocery Ads
 
 **Disclaimer**: This project fetches data from a public API (`api.etilbudsavis.dk`). The API provider's terms of service may restrict commercial use or redistribution of the data. This project is for personal/educational use only. Users are responsible for complying with the API provider's terms.
 
-Search engine for Danish grocery store weekly offers (tilbudsaviser).
+Search engine for Danish grocery store offers (tilbudsaviser).
 
 ## Architecture
 
