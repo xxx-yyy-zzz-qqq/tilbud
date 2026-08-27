@@ -135,9 +135,10 @@ export function HomePage() {
             className="input input-bordered input-sm"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
+            disabled={!status || status.running}
           />
           {filterDate && (
-            <button className="btn btn-ghost btn-xs" onClick={() => setFilterDate('')}>Ryd</button>
+            <button className="btn btn-ghost btn-xs" onClick={() => setFilterDate('')} disabled={!status || status.running}>Ryd</button>
           )}
         </div>
       </div>
