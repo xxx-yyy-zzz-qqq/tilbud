@@ -1,7 +1,6 @@
 package tilbud.service;
 
 import io.github.resilience4j.retry.annotation.Retry;
-import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
@@ -191,7 +190,6 @@ public class OfferIngestionService {
     }
 
     @Retry(name = "etilbudsavis")
-    @Timed(value = "etilbudsavis_chain_fetch_duration", description = "Time to fetch one chain")
     public void fetchChain(Chain chain) {
         log.debug("Fetching catalogs for chain {} ({})", chain.getName(), chain.getDealerId());
 

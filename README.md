@@ -139,7 +139,6 @@ Actuator exposes `/actuator/health` with database connectivity status.
 | Metric | Type | Description |
 |--------|------|-------------|
 | `etilbudsavis_fetch_duration_seconds` | Timer | Time to fetch all chains |
-| `etilbudsavis_chain_fetch_duration` | Timer | Time to fetch one chain |
 | `etilbudsavis_offers_fetched_total` | Counter | Total offers fetched |
 | `etilbudsavis_offers_inserted_total` | Counter | New offers inserted |
 | `etilbudsavis_fetch_errors_total` | Counter | Fetch errors |
